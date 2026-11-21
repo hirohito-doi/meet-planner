@@ -20,6 +20,12 @@ export const createPollSchema = z.object({
   slots: z.array(slotSchema).min(1).max(100),
 });
 
+export const respondSchema = z.object({
+  name: z.string().trim().min(1).max(30),
+  availabilities: z.record(z.string(), z.enum(["yes", "maybe", "no"])),
+  comment: z.string().trim().max(200),
+});
+
 /** zod で検証し、失敗したら PollError("INVALID_INPUT") を投げる */
 export function parse<T extends z.ZodType>(schema: T, input: unknown): z.output<T> {
   const result = schema.safeParse(input);

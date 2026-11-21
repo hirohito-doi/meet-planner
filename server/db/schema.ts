@@ -1,4 +1,4 @@
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 /** 日程調整 (Poll) */
 export const polls = sqliteTable("polls", {
@@ -20,4 +20,30 @@ export const slots = sqliteTable(
     endAt: integer("end_at").notNull(),
   },
   (t) => [index("slots_poll_id_idx").on(t.pollId)],
+);
+
+/** 回答 (Response): 1人の回答者が提出したもの全体 */
+export const responses = sqliteTable(
+  "responses",
+  {
+    id: text("id").primaryKey(),
+    pollId: text("poll_id").notNull(),
+    name: text("name").notNull(),
+    comment: text("comment").notNull().default(""),
+    /** 編集用トークンの SHA-256 (ADR 0001) */
+    editTokenHash: text("edit_token_hash").notNull().unique(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [index("responses_poll_id_idx").on(t.pollId)],
+);
+
+/** 可否 (Availability): 1つの候補に対する回答者の都合。行がなければ未回答 */
+export const availabilities = sqliteTable(
+  "availabilities",
+  {
+    responseId: text("response_id").notNull(),
+    slotId: text("slot_id").notNull(),
+    value: text("value", { enum: ["yes", "maybe", "no"] }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.responseId, t.slotId] }), index("availabilities_slot_id_idx").on(t.slotId)],
 );
