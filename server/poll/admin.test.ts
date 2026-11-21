@@ -67,3 +67,41 @@ describe("タイトルと説明の編集", () => {
     await expect(admin!.updateDetails(details)).rejects.toMatchObject({ code: "INVALID_INPUT" });
   });
 });
+
+describe("確定", () => {
+  test("候補を1件選んで確定すると、回答画面に確定した候補が示される", async () => {
+    const { db, pollId, adminToken, dec4 } = await setup();
+    const admin = await openAdmin(db, pollId, adminToken);
+
+    await admin!.finalize(dec4);
+
+    expect(await readPoll(db, pollId)).toMatchObject({ finalizedSlotId: dec4 });
+  });
+
+  test("この日程調整にない候補は確定できない", async () => {
+    const { db, pollId, adminToken } = await setup();
+    const admin = await openAdmin(db, pollId, adminToken);
+
+    await expect(admin!.finalize("other-poll-slot")).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  });
+
+  test("確定中に別の候補を選ぶと、確定し直せる", async () => {
+    const { db, pollId, adminToken, dec3, dec4 } = await setup();
+    const admin = await openAdmin(db, pollId, adminToken);
+    await admin!.finalize(dec3);
+
+    await admin!.finalize(dec4);
+
+    expect(await readPoll(db, pollId)).toMatchObject({ finalizedSlotId: dec4 });
+  });
+
+  test("確定を取り消すと、確定していない状態に戻る", async () => {
+    const { db, pollId, adminToken, dec3 } = await setup();
+    const admin = await openAdmin(db, pollId, adminToken);
+    await admin!.finalize(dec3);
+
+    await admin!.unfinalize();
+
+    expect(await readPoll(db, pollId)).toMatchObject({ finalizedSlotId: null });
+  });
+});

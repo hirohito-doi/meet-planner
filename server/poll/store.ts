@@ -48,6 +48,7 @@ export async function findPoll(db: Db, pollId: string) {
     id: poll.id,
     title: poll.title,
     description: poll.description,
+    finalizedSlotId: poll.finalizedSlotId,
     slots: rows.map((r) => ({ id: r.id, start: r.startAt, end: r.endAt })),
     responses: responseRows.map((r) => ({
       id: r.id,
@@ -105,4 +106,8 @@ export async function findPollByAdminToken(db: Db, pollId: string, adminTokenHas
 
 export async function updatePollDetails(db: Db, pollId: string, details: { title: string; description: string }) {
   await db.update(polls).set(details).where(eq(polls.id, pollId));
+}
+
+export async function setFinalizedSlot(db: Db, pollId: string, slotId: string | null) {
+  await db.update(polls).set({ finalizedSlotId: slotId }).where(eq(polls.id, pollId));
 }

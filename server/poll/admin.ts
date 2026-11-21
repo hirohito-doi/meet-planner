@@ -1,5 +1,6 @@
 import type { Db } from "@/server/db";
-import { findPollByAdminToken, updatePollDetails } from "./store";
+import { PollError } from "./errors";
+import { findPollByAdminToken, hasSlot, setFinalizedSlot, updatePollDetails } from "./store";
 import { hashToken } from "./token";
 import { detailsSchema, parse } from "./validation";
 
@@ -11,6 +12,17 @@ export async function openAdmin(db: Db, pollId: string, adminToken: string) {
     /** タイトルと説明を変更する */
     async updateDetails(rawInput: { title: string; description: string }) {
       await updatePollDetails(db, pollId, parse(detailsSchema, rawInput));
+    },
+    /** 候補を1件選んで確定する */
+    async finalize(slotId: string) {
+      if (!(await hasSlot(db, pollId, slotId))) {
+        throw new PollError("INVALID_INPUT", "この日程調整にない候補です");
+      }
+      await setFinalizedSlot(db, pollId, slotId);
+    },
+    /** 確定を取り消す */
+    async unfinalize() {
+      await setFinalizedSlot(db, pollId, null);
     },
   };
 }

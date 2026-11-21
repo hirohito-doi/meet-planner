@@ -7,6 +7,8 @@ export const polls = sqliteTable("polls", {
   description: text("description").notNull().default(""),
   /** 管理トークンの SHA-256。トークンそのものは保存しない (ADR 0001) */
   adminTokenHash: text("admin_token_hash").notNull().unique(),
+  /** 確定した候補の ID。null なら確定していない */
+  finalizedSlotId: text("finalized_slot_id"),
   createdAt: integer("created_at").notNull(),
 });
 

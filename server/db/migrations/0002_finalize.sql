@@ -1,0 +1,1 @@
+ALTER TABLE `polls` ADD `finalized_slot_id` text;
