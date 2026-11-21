@@ -79,3 +79,9 @@ export async function saveAvailability(db: Db, responseId: string, slotId: strin
     .values({ responseId, slotId, value })
     .onConflictDoUpdate({ target: [availabilities.responseId, availabilities.slotId], set: { value } });
 }
+
+export async function deleteAvailability(db: Db, responseId: string, slotId: string) {
+  await db
+    .delete(availabilities)
+    .where(and(eq(availabilities.responseId, responseId), eq(availabilities.slotId, slotId)));
+}

@@ -1,6 +1,13 @@
 import type { Db } from "@/server/db";
 import type { Availability } from "./ranking";
-import { findPoll, findResponseByToken, insertPoll, insertResponse, saveAvailability } from "./store";
+import {
+  deleteAvailability,
+  findPoll,
+  findResponseByToken,
+  insertPoll,
+  insertResponse,
+  saveAvailability,
+} from "./store";
 import { hashToken, newId, newToken } from "./token";
 import { PollError } from "./errors";
 import { createPollSchema, joinSchema, parse, respondSchema } from "./validation";
@@ -72,8 +79,10 @@ export async function openResponse(db: Db, pollId: string, editToken: string) {
   const response = await findResponseByToken(db, pollId, hashToken(editToken));
   if (!response) return null;
   return {
-    async setAvailability(slotId: string, value: Availability) {
-      await saveAvailability(db, response.id, slotId, value);
+    /** 可否を保存する。null なら未回答に戻す */
+    async setAvailability(slotId: string, value: Availability | null) {
+      if (value === null) await deleteAvailability(db, response.id, slotId);
+      else await saveAvailability(db, response.id, slotId, value);
     },
   };
 }

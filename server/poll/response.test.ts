@@ -81,4 +81,38 @@ describe("可否の保存", () => {
 
     expect((await readPoll(db, pollId))?.responses).toMatchObject([{ availabilities: { [dec3]: "maybe" } }]);
   });
+
+  test("可否を空欄に戻すと、未回答になる", async () => {
+    const { db, pollId, dec3, dec4 } = await setup();
+    const { editToken } = await join(db, pollId, { name: "田中" });
+    const me = await openResponse(db, pollId, editToken);
+    await me!.setAvailability(dec3, "yes");
+    await me!.setAvailability(dec4, "no");
+
+    await me!.setAvailability(dec3, null);
+
+    const [tanaka] = (await readPoll(db, pollId))!.responses;
+    expect(tanaka.availabilities).toEqual({ [dec4]: "no" });
+  });
+});
+
+describe("回答者として開く", () => {
+  test("でたらめな編集用トークンでは開けない", async () => {
+    const { db, pollId } = await setup();
+    await join(db, pollId, { name: "田中" });
+
+    expect(await openResponse(db, pollId, "not-a-token")).toBeNull();
+  });
+
+  test("別の日程調整の編集用トークンでは開けない", async () => {
+    const { db, pollId } = await setup();
+    const other = await createPoll(db, {
+      title: "新年会",
+      description: "",
+      slots: [{ start: at("2027-01-08T19:00:00+09:00"), end: at("2027-01-08T21:00:00+09:00") }],
+    });
+    const { editToken } = await join(db, other.pollId, { name: "田中" });
+
+    expect(await openResponse(db, pollId, editToken)).toBeNull();
+  });
 });
