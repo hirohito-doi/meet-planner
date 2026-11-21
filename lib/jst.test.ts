@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { formatClockInColumn, formatSlot, jstMidnight } from "./jst";
+import { formatClockInColumn, formatSlot, jstDate, jstMidnight } from "./jst";
 
 const at = (iso: string) => new Date(iso).getTime();
 
@@ -49,5 +49,11 @@ describe("表の中の短い時刻", () => {
 
     expect(formatClockInColumn("2026-12-03", midnight, { isEnd: true })).toBe("24:00");
     expect(formatClockInColumn("2026-12-03", midnight)).toBe("翌0:00");
+  });
+});
+
+describe("時刻の日付", () => {
+  test("時刻から JST の日付を求める(UTC ではまだ前日の深夜でも、JST の日付になる)", () => {
+    expect(jstDate(at("2026-12-04T02:00:00+09:00"))).toBe("2026-12-04");
   });
 });

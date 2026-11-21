@@ -53,3 +53,8 @@ export function formatClockInColumn(date: string, time: number, { isEnd = false 
   const prefix = offset < 0 ? "前" : offset > 0 ? "翌" : "";
   return prefix + formatClock(time);
 }
+
+/** 時刻を含む JST の日付(YYYY-MM-DD)。保存済みの候補を置く列は、開始時刻のこの日付で決める */
+export function jstDate(time: number) {
+  return new Date(time + JST_OFFSET).toISOString().slice(0, 10);
+}
