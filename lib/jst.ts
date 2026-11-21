@@ -20,7 +20,8 @@ function jst(time: number) {
   };
 }
 
-const formatDay = (time: number) => {
+/** 日付の表示(例: 「12/3(木)」) */
+export const formatDay = (time: number) => {
   const t = jst(time);
   return `${t.month}/${t.day}(${t.weekday})`;
 };

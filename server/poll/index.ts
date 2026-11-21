@@ -113,3 +113,6 @@ export async function readPoll(db: Db, pollId: string) {
   if (!poll) return null;
   return { ...poll, ranking: rankSlots(poll.slots, poll.responses) };
 }
+
+/** 回答画面・管理画面に渡す日程調整の内容(トークンは含まない) */
+export type PollView = NonNullable<Awaited<ReturnType<typeof readPoll>>>;
