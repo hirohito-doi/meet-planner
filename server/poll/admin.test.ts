@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { createPoll, join, openAdmin, readPoll } from "./index";
+import { createPoll, join, openAdmin, openResponse, readPoll } from "./index";
 import { createTestDb } from "./test-db";
 
 const at = (iso: string) => new Date(iso).getTime();
@@ -103,5 +103,42 @@ describe("確定", () => {
     await admin!.unfinalize();
 
     expect(await readPoll(db, pollId)).toMatchObject({ finalizedSlotId: null });
+  });
+});
+
+describe("確定中は読み取り専用", () => {
+  test("確定中は、回答者として登録できない", async () => {
+    const { db, pollId, adminToken, dec3 } = await setup();
+    await (await openAdmin(db, pollId, adminToken))!.finalize(dec3);
+
+    await expect(join(db, pollId, { name: "田中" })).rejects.toMatchObject({ code: "FINALIZED" });
+  });
+
+  test("確定中は、可否を保存できない", async () => {
+    const { db, pollId, adminToken, dec3 } = await setup();
+    const { editToken } = await join(db, pollId, { name: "田中" });
+    const me = await openResponse(db, pollId, editToken);
+    await (await openAdmin(db, pollId, adminToken))!.finalize(dec3);
+
+    await expect(me!.setAvailability(dec3, "yes")).rejects.toMatchObject({ code: "FINALIZED" });
+  });
+
+  test("確定中は、名前とコメントを保存できない", async () => {
+    const { db, pollId, adminToken, dec3 } = await setup();
+    const { editToken } = await join(db, pollId, { name: "田中" });
+    const me = await openResponse(db, pollId, editToken);
+    await (await openAdmin(db, pollId, adminToken))!.finalize(dec3);
+
+    await expect(me!.updateProfile({ name: "田中太郎", comment: "" })).rejects.toMatchObject({ code: "FINALIZED" });
+  });
+
+  test("確定中は、タイトルと説明を変更できない", async () => {
+    const { db, pollId, adminToken, dec3 } = await setup();
+    const admin = await openAdmin(db, pollId, adminToken);
+    await admin!.finalize(dec3);
+
+    await expect(admin!.updateDetails({ title: "新年会", description: "" })).rejects.toMatchObject({
+      code: "FINALIZED",
+    });
   });
 });

@@ -1,5 +1,6 @@
 import type { Db } from "@/server/db";
 import { PollError } from "./errors";
+import { assertNotFinalized } from "./guards";
 import { findPollByAdminToken, hasSlot, setFinalizedSlot, updatePollDetails } from "./store";
 import { hashToken } from "./token";
 import { detailsSchema, parse } from "./validation";
@@ -11,7 +12,9 @@ export async function openAdmin(db: Db, pollId: string, adminToken: string) {
   return {
     /** タイトルと説明を変更する */
     async updateDetails(rawInput: { title: string; description: string }) {
-      await updatePollDetails(db, pollId, parse(detailsSchema, rawInput));
+      const details = parse(detailsSchema, rawInput);
+      await assertNotFinalized(db, pollId);
+      await updatePollDetails(db, pollId, details);
     },
     /** 候補を1件選んで確定する */
     async finalize(slotId: string) {

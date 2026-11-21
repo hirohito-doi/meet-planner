@@ -111,3 +111,8 @@ export async function updatePollDetails(db: Db, pollId: string, details: { title
 export async function setFinalizedSlot(db: Db, pollId: string, slotId: string | null) {
   await db.update(polls).set({ finalizedSlotId: slotId }).where(eq(polls.id, pollId));
 }
+
+export async function isFinalized(db: Db, pollId: string) {
+  const [row] = await db.select({ finalizedSlotId: polls.finalizedSlotId }).from(polls).where(eq(polls.id, pollId));
+  return row?.finalizedSlotId != null;
+}

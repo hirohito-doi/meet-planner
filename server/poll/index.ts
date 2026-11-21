@@ -12,6 +12,7 @@ import {
 } from "./store";
 import { hashToken, newId, newToken } from "./token";
 import { PollError } from "./errors";
+import { assertNotFinalized } from "./guards";
 import {
   availabilitySchema,
   createPollSchema,
@@ -77,6 +78,7 @@ export async function join(db: Db, pollId: string, rawInput: { name: string }) {
   const input = parse(joinSchema, rawInput);
   const poll = await findPoll(db, pollId);
   if (!poll) throw new PollError("NOT_FOUND", "日程調整が見つかりません");
+  if (poll.finalizedSlotId !== null) throw new PollError("FINALIZED", "確定中のため変更できません");
   if (poll.responses.length >= MAX_RESPONDENTS) {
     throw new PollError("LIMIT_EXCEEDED", `回答者は${MAX_RESPONDENTS}人までです`);
   }
@@ -101,6 +103,7 @@ export async function openResponse(db: Db, pollId: string, editToken: string) {
     /** 可否を保存する。null なら未回答に戻す */
     async setAvailability(slotId: string, rawValue: Availability | null) {
       const value = parse(availabilitySchema, rawValue);
+      await assertNotFinalized(db, pollId);
       if (!(await hasSlot(db, pollId, slotId))) {
         throw new PollError("INVALID_INPUT", "この日程調整にない候補です");
       }
@@ -109,7 +112,9 @@ export async function openResponse(db: Db, pollId: string, editToken: string) {
     },
     /** 名前とコメントを保存する */
     async updateProfile(rawInput: { name: string; comment: string }) {
-      await updateResponseProfile(db, response.id, parse(profileSchema, rawInput));
+      const profile = parse(profileSchema, rawInput);
+      await assertNotFinalized(db, pollId);
+      await updateResponseProfile(db, response.id, profile);
     },
   };
 }
