@@ -1,7 +1,7 @@
 import type { Db } from "@/server/db";
 import { PollError } from "./errors";
 import { assertNotFinalized } from "./guards";
-import { deleteSlot, findPoll, findPollByAdminToken, hasSlot, insertSlots, setFinalizedSlot, updatePollDetails } from "./store";
+import { deleteResponse, deleteSlot, findPoll, findPollByAdminToken, hasResponse, hasSlot, insertSlots, setFinalizedSlot, updatePollDetails } from "./store";
 import { MAX_SLOTS, type SlotInput, uniqueSlots } from "./slots";
 import { hashToken, newId } from "./token";
 import { detailsSchema, parse, slotListSchema } from "./validation";
@@ -42,6 +42,13 @@ export async function openAdmin(db: Db, pollId: string, adminToken: string) {
       }
       await assertNotFinalized(db, pollId);
       await deleteSlot(db, pollId, slotId);
+    },
+    /** 回答を1人分まとめて削除する。確定中でも削除できる */
+    async deleteResponse(responseId: string) {
+      if (!(await hasResponse(db, pollId, responseId))) {
+        throw new PollError("INVALID_INPUT", "この日程調整にない回答です");
+      }
+      await deleteResponse(db, responseId);
     },
     /** 確定を取り消す */
     async unfinalize() {

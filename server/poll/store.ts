@@ -128,3 +128,19 @@ export async function deleteSlot(db: Db, pollId: string, slotId: string) {
     db.delete(slots).where(and(eq(slots.pollId, pollId), eq(slots.id, slotId))),
   ]);
 }
+
+/** 回答と、その回答の可否を削除する(外部キーがないので可否も明示的に消す) */
+export async function deleteResponse(db: Db, responseId: string) {
+  await db.batch([
+    db.delete(availabilities).where(eq(availabilities.responseId, responseId)),
+    db.delete(responses).where(eq(responses.id, responseId)),
+  ]);
+}
+
+export async function hasResponse(db: Db, pollId: string, responseId: string) {
+  const [row] = await db
+    .select({ id: responses.id })
+    .from(responses)
+    .where(and(eq(responses.pollId, pollId), eq(responses.id, responseId)));
+  return row !== undefined;
+}
