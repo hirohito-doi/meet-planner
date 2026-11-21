@@ -1,8 +1,14 @@
 import { describe, expect, test } from "vitest";
-import { createPoll, readPoll } from "./index";
+import { createPoll, readPoll, type CreatePollInput } from "./index";
 import { createTestDb } from "./test-db";
 
 const at = (iso: string) => new Date(iso).getTime();
+
+const validInput = (): CreatePollInput => ({
+  title: "忘年会",
+  description: "",
+  slots: [{ start: at("2026-12-03T19:00:00+09:00"), end: at("2026-12-03T21:00:00+09:00") }],
+});
 
 describe("日程調整の作成と読み取り", () => {
   test("作成した日程調整を読み取ると、タイトル・説明・候補が返る", async () => {
@@ -72,3 +78,98 @@ describe("候補の保存", () => {
     ]);
   });
 });
+
+describe("日程調整の作成時の入力値の検証", () => {
+  test.each([
+    ["空", ""],
+    ["空白だけ", "   "],
+    ["101文字", "あ".repeat(101)],
+  ])("タイトルが%sなら作成できない", async (_, title) => {
+    const db = await createTestDb();
+
+    await expect(createPoll(db, { ...validInput(), title })).rejects.toMatchObject({
+      code: "INVALID_INPUT",
+    });
+  });
+
+  test("タイトルは前後の空白を取り除いて保存し、取り除いた後の100文字までは作成できる", async () => {
+    const db = await createTestDb();
+    const title = "あ".repeat(100);
+
+    const { pollId } = await createPoll(db, { ...validInput(), title: `  ${title}  ` });
+
+    expect((await readPoll(db, pollId))?.title).toBe(title);
+  });
+
+  test("説明が1,001文字なら作成できない", async () => {
+    const db = await createTestDb();
+
+    await expect(
+      createPoll(db, { ...validInput(), description: "あ".repeat(1001) }),
+    ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  });
+
+  test("説明は前後の空白を取り除いて保存し、取り除いた後の1,000文字までは作成できる", async () => {
+    const db = await createTestDb();
+    const description = "あ".repeat(1000);
+
+    const { pollId } = await createPoll(db, { ...validInput(), description: `\n${description}\n` });
+
+    expect((await readPoll(db, pollId))?.description).toBe(description);
+  });
+
+  test("候補が0件なら作成できない", async () => {
+    const db = await createTestDb();
+
+    await expect(createPoll(db, { ...validInput(), slots: [] })).rejects.toMatchObject({
+      code: "INVALID_INPUT",
+    });
+  });
+
+  test("重複をまとめた後の候補が26件なら、上限超過で作成できない", async () => {
+    const db = await createTestDb();
+
+    await expect(
+      createPoll(db, { ...validInput(), slots: hourlySlots(26) }),
+    ).rejects.toMatchObject({ code: "LIMIT_EXCEEDED" });
+  });
+
+  test("26件送っても、重複をまとめて25件になれば作成できる", async () => {
+    const db = await createTestDb();
+    const slots = hourlySlots(25);
+
+    const { pollId } = await createPoll(db, { ...validInput(), slots: [...slots, slots[0]] });
+
+    expect((await readPoll(db, pollId))?.slots).toHaveLength(25);
+  });
+
+  test.each([
+    ["終了が開始と同じ", "2026-12-03T19:00:00+09:00", "2026-12-03T19:00:00+09:00"],
+    ["終了が開始より前", "2026-12-03T19:00:00+09:00", "2026-12-03T18:00:00+09:00"],
+    ["開始が30分単位でない", "2026-12-03T19:10:00+09:00", "2026-12-03T20:00:00+09:00"],
+    ["終了が30分単位でない", "2026-12-03T19:00:00+09:00", "2026-12-03T20:15:00+09:00"],
+    ["長さが36時間を超える", "2026-12-02T18:00:00+09:00", "2026-12-04T06:30:00+09:00"],
+  ])("候補の%sなら作成できない", async (_, start, end) => {
+    const db = await createTestDb();
+
+    await expect(
+      createPoll(db, { ...validInput(), slots: [{ start: at(start), end: at(end) }] }),
+    ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  });
+
+  test("ちょうど36時間(前日 18:00〜翌日 6:00)の候補は作成できる", async () => {
+    const db = await createTestDb();
+    const slot = { start: at("2026-12-02T18:00:00+09:00"), end: at("2026-12-04T06:00:00+09:00") };
+
+    const { pollId } = await createPoll(db, { ...validInput(), slots: [slot] });
+
+    expect((await readPoll(db, pollId))?.slots).toMatchObject([slot]);
+  });
+});
+
+/** 12/3 0:00 JST から1時間ずつずらした、長さ1時間の候補を n 件 */
+function hourlySlots(n: number) {
+  const base = at("2026-12-03T00:00:00+09:00");
+  const hour = 60 * 60 * 1000;
+  return Array.from({ length: n }, (_, i) => ({ start: base + i * hour, end: base + (i + 1) * hour }));
+}

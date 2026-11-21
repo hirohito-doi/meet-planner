@@ -1,6 +1,13 @@
 import type { Db } from "@/server/db";
 import { findPoll, insertPoll } from "./store";
 import { hashToken, newId, newToken } from "./token";
+import { PollError } from "./errors";
+import { createPollSchema, parse } from "./validation";
+
+export { PollError, type PollErrorCode } from "./errors";
+
+/** 1つの日程調整の候補の上限(重複をまとめた後の件数) */
+const MAX_SLOTS = 25;
 
 export type SlotInput = { start: number; end: number };
 
@@ -11,7 +18,12 @@ export type CreatePollInput = {
 };
 
 /** 日程調整を作成する。管理トークンは、この戻り値でしか手に入らない */
-export async function createPoll(db: Db, input: CreatePollInput) {
+export async function createPoll(db: Db, rawInput: CreatePollInput) {
+  const input = parse(createPollSchema, rawInput);
+  const slots = uniqueSlots(input.slots);
+  if (slots.length > MAX_SLOTS) {
+    throw new PollError("LIMIT_EXCEEDED", `候補は${MAX_SLOTS}件までです`);
+  }
   const pollId = newId();
   const adminToken = newToken();
   await insertPoll(
@@ -23,7 +35,7 @@ export async function createPoll(db: Db, input: CreatePollInput) {
       adminTokenHash: hashToken(adminToken),
       createdAt: Date.now(),
     },
-    uniqueSlots(input.slots).map((s) => ({ id: newId(), ...s })),
+    slots.map((s) => ({ id: newId(), ...s })),
   );
   return { pollId, adminToken };
 }
