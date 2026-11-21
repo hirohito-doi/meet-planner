@@ -13,9 +13,14 @@ const slotSchema = z
   .refine((s) => s.end > s.start, "終了は開始より後にしてください")
   .refine((s) => s.end - s.start <= MAX_SLOT_LENGTH, "候補の長さは36時間までです");
 
+const title = z.string().trim().min(1).max(100);
+const description = z.string().trim().max(1000);
+
+export const detailsSchema = z.object({ title, description });
+
 export const createPollSchema = z.object({
-  title: z.string().trim().min(1).max(100),
-  description: z.string().trim().max(1000),
+  title,
+  description,
   // 重複をまとめる前の件数の上限。大量に送られても重い処理をしないため(まとめた後の上限25件は index.ts で確かめる)
   slots: z.array(slotSchema).min(1).max(100),
 });

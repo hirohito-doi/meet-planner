@@ -93,3 +93,16 @@ export async function hasSlot(db: Db, pollId: string, slotId: string) {
 export async function updateResponseProfile(db: Db, responseId: string, profile: { name: string; comment: string }) {
   await db.update(responses).set(profile).where(eq(responses.id, responseId));
 }
+
+/** 管理トークンのハッシュから日程調整を探す。なければ null */
+export async function findPollByAdminToken(db: Db, pollId: string, adminTokenHash: string) {
+  const [row] = await db
+    .select({ id: polls.id })
+    .from(polls)
+    .where(and(eq(polls.id, pollId), eq(polls.adminTokenHash, adminTokenHash)));
+  return row ?? null;
+}
+
+export async function updatePollDetails(db: Db, pollId: string, details: { title: string; description: string }) {
+  await db.update(polls).set(details).where(eq(polls.id, pollId));
+}

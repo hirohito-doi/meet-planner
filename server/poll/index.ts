@@ -21,6 +21,7 @@ import {
 } from "./validation";
 
 export { PollError, type PollErrorCode } from "./errors";
+export { openAdmin, type Admin } from "./admin";
 export type { Availability } from "./ranking";
 
 /** 1つの日程調整の候補の上限(重複をまとめた後の件数) */
