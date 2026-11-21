@@ -1,5 +1,5 @@
 import type { Db } from "@/server/db";
-import type { Availability } from "./ranking";
+import { type Availability, rankSlots } from "./ranking";
 import {
   deleteAvailability,
   findPoll,
@@ -107,7 +107,9 @@ export async function openResponse(db: Db, pollId: string, editToken: string) {
   };
 }
 
-/** 回答画面用に日程調整を読み取る。見つからなければ null */
+/** 回答画面用に日程調整を読み取る。ranking はスコアの高い順(同点の扱いは ranking.ts)。見つからなければ null */
 export async function readPoll(db: Db, pollId: string) {
-  return findPoll(db, pollId);
+  const poll = await findPoll(db, pollId);
+  if (!poll) return null;
+  return { ...poll, ranking: rankSlots(poll.slots, poll.responses) };
 }

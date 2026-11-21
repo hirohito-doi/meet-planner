@@ -221,3 +221,20 @@ describe("回答者の並び順", () => {
     ]);
   });
 });
+
+describe("スコアと順位", () => {
+  test("読み取ると、候補ごとのスコアがスコアの高い順に並んで返る", async () => {
+    const { db, pollId, dec3, dec4 } = await setup();
+    const tanaka = await openResponse(db, pollId, (await join(db, pollId, { name: "田中" })).editToken);
+    const suzuki = await openResponse(db, pollId, (await join(db, pollId, { name: "鈴木" })).editToken);
+    await tanaka!.setAvailability(dec3, "maybe");
+    await tanaka!.setAvailability(dec4, "yes");
+    await suzuki!.setAvailability(dec3, "no");
+    await suzuki!.setAvailability(dec4, "maybe");
+
+    expect((await readPoll(db, pollId))!.ranking).toEqual([
+      { slotId: dec4, score: 3 },
+      { slotId: dec3, score: 1 },
+    ]);
+  });
+});
