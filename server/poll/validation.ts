@@ -16,7 +16,8 @@ const slotSchema = z
 export const createPollSchema = z.object({
   title: z.string().trim().min(1).max(100),
   description: z.string().trim().max(1000),
-  slots: z.array(slotSchema).min(1),
+  // 重複をまとめる前の件数の上限。大量に送られても重い処理をしないため(まとめた後の上限25件は index.ts で確かめる)
+  slots: z.array(slotSchema).min(1).max(100),
 });
 
 /** zod で検証し、失敗したら PollError("INVALID_INPUT") を投げる */

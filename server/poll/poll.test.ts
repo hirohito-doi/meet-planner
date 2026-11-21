@@ -143,6 +143,26 @@ describe("日程調整の作成時の入力値の検証", () => {
     expect((await readPoll(db, pollId))?.slots).toHaveLength(25);
   });
 
+  test("候補を101件送ると、重複をまとめる前に不正な入力として拒否する", async () => {
+    const db = await createTestDb();
+
+    await expect(
+      createPoll(db, { ...validInput(), slots: hourlySlots(101) }),
+    ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  });
+
+  test("候補を100件送っても、重複をまとめて25件以下になれば作成できる", async () => {
+    const db = await createTestDb();
+    const slots = hourlySlots(25);
+
+    const { pollId } = await createPoll(db, {
+      ...validInput(),
+      slots: [...slots, ...slots, ...slots, ...slots],
+    });
+
+    expect((await readPoll(db, pollId))?.slots).toHaveLength(25);
+  });
+
   test.each([
     ["終了が開始と同じ", "2026-12-03T19:00:00+09:00", "2026-12-03T19:00:00+09:00"],
     ["終了が開始より前", "2026-12-03T19:00:00+09:00", "2026-12-03T18:00:00+09:00"],
