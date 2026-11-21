@@ -29,12 +29,6 @@ export const profileSchema = z.object({ name, comment: z.string().trim().max(200
 /** 可否。null は未回答に戻す */
 export const availabilitySchema = z.enum(["yes", "maybe", "no"]).nullable();
 
-export const respondSchema = z.object({
-  name,
-  availabilities: z.record(z.string(), z.enum(["yes", "maybe", "no"])),
-  comment: z.string().trim().max(200),
-});
-
 /** zod で検証し、失敗したら PollError("INVALID_INPUT") を投げる */
 export function parse<T extends z.ZodType>(schema: T, input: unknown): z.output<T> {
   const result = schema.safeParse(input);

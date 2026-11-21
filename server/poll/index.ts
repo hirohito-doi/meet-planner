@@ -18,7 +18,6 @@ import {
   joinSchema,
   parse,
   profileSchema,
-  respondSchema,
 } from "./validation";
 
 export { PollError, type PollErrorCode } from "./errors";
@@ -82,11 +81,14 @@ export async function join(db: Db, pollId: string, rawInput: { name: string }) {
   }
   const responseId = newId();
   const editToken = newToken();
-  await insertResponse(
-    db,
-    { id: responseId, pollId, name: input.name, comment: "", editTokenHash: hashToken(editToken), createdAt: Date.now() },
-    {},
-  );
+  await insertResponse(db, {
+    id: responseId,
+    pollId,
+    name: input.name,
+    comment: "",
+    editTokenHash: hashToken(editToken),
+    createdAt: Date.now(),
+  });
   return { responseId, editToken };
 }
 
@@ -109,39 +111,6 @@ export async function openResponse(db: Db, pollId: string, editToken: string) {
       await updateResponseProfile(db, response.id, parse(profileSchema, rawInput));
     },
   };
-}
-
-export type RespondInput = {
-  name: string;
-  /** 候補 ID → 可否。含まれない候補は未回答 */
-  availabilities: Record<string, Availability>;
-  comment: string;
-};
-
-/** 回答する。編集用トークンは、この戻り値でしか手に入らない(ブラウザに保存する) */
-export async function respond(db: Db, pollId: string, rawInput: RespondInput) {
-  const input = parse(respondSchema, rawInput);
-  const poll = await findPoll(db, pollId);
-  if (!poll) throw new PollError("NOT_FOUND", "日程調整が見つかりません");
-  const slotIds = new Set(poll.slots.map((s) => s.id));
-  if (Object.keys(input.availabilities).some((id) => !slotIds.has(id))) {
-    throw new PollError("INVALID_INPUT", "この日程調整にない候補が含まれています");
-  }
-  const responseId = newId();
-  const editToken = newToken();
-  await insertResponse(
-    db,
-    {
-      id: responseId,
-      pollId,
-      name: input.name,
-      comment: input.comment,
-      editTokenHash: hashToken(editToken),
-      createdAt: Date.now(),
-    },
-    input.availabilities,
-  );
-  return { responseId, editToken };
 }
 
 /** 回答画面用に日程調整を読み取る。見つからなければ null */

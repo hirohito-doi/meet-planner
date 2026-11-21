@@ -9,13 +9,8 @@ export type StoredSlot = { id: string; start: number; end: number };
 export async function insertResponse(
   db: Db,
   response: { id: string; pollId: string; name: string; comment: string; editTokenHash: string; createdAt: number },
-  answers: Readonly<Record<string, Availability>>,
 ) {
-  const rows = Object.entries(answers).map(([slotId, value]) => ({ responseId: response.id, slotId, value }));
-  await db.batch([
-    db.insert(responses).values(response),
-    ...(rows.length ? [db.insert(availabilities).values(rows)] : []),
-  ]);
+  await db.insert(responses).values(response);
 }
 
 export async function insertPoll(
