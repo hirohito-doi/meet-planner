@@ -330,3 +330,47 @@ describe("回答の削除", () => {
     expect((await readPoll(db, pollId))!.responses).toEqual([]);
   });
 });
+
+describe("日程調整の削除", () => {
+  test("削除すると読み取れなくなり、管理トークンでも編集用トークンでも開けなくなる", async () => {
+    const { db, pollId, adminToken } = await setup();
+    const { editToken } = await join(db, pollId, { name: "田中" });
+    const admin = await openAdmin(db, pollId, adminToken);
+
+    await admin!.deletePoll();
+
+    expect(await readPoll(db, pollId)).toBeNull();
+    expect(await openAdmin(db, pollId, adminToken)).toBeNull();
+    expect(await openResponse(db, pollId, editToken)).toBeNull();
+  });
+
+  test("削除しても、ほかの日程調整の回答は消えない", async () => {
+    const { db, pollId, adminToken, dec3 } = await setup();
+    const tanaka = await join(db, pollId, { name: "田中" });
+    await (await openResponse(db, pollId, tanaka.editToken))!.setAvailability(dec3, "yes");
+    const other = await createPoll(db, {
+      title: "新年会",
+      description: "",
+      slots: [{ start: at("2027-01-08T19:00:00+09:00"), end: at("2027-01-08T21:00:00+09:00") }],
+    });
+    const [jan8] = (await readPoll(db, other.pollId))!.slots.map((s) => s.id);
+    const suzuki = await join(db, other.pollId, { name: "鈴木" });
+    await (await openResponse(db, other.pollId, suzuki.editToken))!.setAvailability(jan8, "maybe");
+
+    await (await openAdmin(db, pollId, adminToken))!.deletePoll();
+
+    expect((await readPoll(db, other.pollId))!.responses).toMatchObject([
+      { name: "鈴木", availabilities: { [jan8]: "maybe" } },
+    ]);
+  });
+
+  test("確定中でも削除できる", async () => {
+    const { db, pollId, adminToken, dec3 } = await setup();
+    const admin = await openAdmin(db, pollId, adminToken);
+    await admin!.finalize(dec3);
+
+    await admin!.deletePoll();
+
+    expect(await readPoll(db, pollId)).toBeNull();
+  });
+});

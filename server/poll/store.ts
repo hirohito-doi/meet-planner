@@ -1,5 +1,5 @@
 // DB アクセスはこのファイルにまとめる。server/poll の外には見せない (ADR 0004)
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "@/server/db";
 import { availabilities, polls, responses, slots } from "@/server/db/schema";
 import type { Availability } from "./ranking";
@@ -143,4 +143,15 @@ export async function hasResponse(db: Db, pollId: string, responseId: string) {
     .from(responses)
     .where(and(eq(responses.pollId, pollId), eq(responses.id, responseId)));
   return row !== undefined;
+}
+
+/** 日程調整と、その候補・回答・可否をすべて削除する(外部キーがないので明示的に消す) */
+export async function deletePoll(db: Db, pollId: string) {
+  const responseIds = db.select({ id: responses.id }).from(responses).where(eq(responses.pollId, pollId));
+  await db.batch([
+    db.delete(availabilities).where(inArray(availabilities.responseId, responseIds)),
+    db.delete(responses).where(eq(responses.pollId, pollId)),
+    db.delete(slots).where(eq(slots.pollId, pollId)),
+    db.delete(polls).where(eq(polls.id, pollId)),
+  ]);
 }
