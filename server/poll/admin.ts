@@ -1,7 +1,7 @@
 import type { Db } from "@/server/db";
 import { PollError } from "./errors";
 import { assertNotFinalized } from "./guards";
-import { findPoll, findPollByAdminToken, hasSlot, insertSlots, setFinalizedSlot, updatePollDetails } from "./store";
+import { deleteSlot, findPoll, findPollByAdminToken, hasSlot, insertSlots, setFinalizedSlot, updatePollDetails } from "./store";
 import { MAX_SLOTS, type SlotInput, uniqueSlots } from "./slots";
 import { hashToken, newId } from "./token";
 import { detailsSchema, parse, slotListSchema } from "./validation";
@@ -34,6 +34,14 @@ export async function openAdmin(db: Db, pollId: string, adminToken: string) {
       if (merged.length > MAX_SLOTS) throw new PollError("LIMIT_EXCEEDED", `候補は${MAX_SLOTS}件までです`);
       const fresh = merged.filter((s) => s.id === undefined);
       if (fresh.length) await insertSlots(db, pollId, fresh.map((s) => ({ id: newId(), start: s.start, end: s.end })));
+    },
+    /** 候補を削除する。その候補への可否も消える */
+    async removeSlot(slotId: string) {
+      if (!(await hasSlot(db, pollId, slotId))) {
+        throw new PollError("INVALID_INPUT", "この日程調整にない候補です");
+      }
+      await assertNotFinalized(db, pollId);
+      await deleteSlot(db, pollId, slotId);
     },
     /** 確定を取り消す */
     async unfinalize() {

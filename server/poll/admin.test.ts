@@ -152,6 +152,14 @@ describe("確定中は読み取り専用", () => {
       admin!.addSlots([{ start: at("2026-12-05T19:00:00+09:00"), end: at("2026-12-05T21:00:00+09:00") }]),
     ).rejects.toMatchObject({ code: "FINALIZED" });
   });
+
+  test("確定中は、確定していない候補も削除できない", async () => {
+    const { db, pollId, adminToken, dec3, dec4 } = await setup();
+    const admin = await openAdmin(db, pollId, adminToken);
+    await admin!.finalize(dec3);
+
+    await expect(admin!.removeSlot(dec4)).rejects.toMatchObject({ code: "FINALIZED" });
+  });
 });
 
 describe("候補の追加", () => {
@@ -237,5 +245,48 @@ describe("候補の追加", () => {
     const admin = await openAdmin(db, pollId, adminToken);
 
     await expect(admin!.addSlots(slots)).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  });
+});
+
+describe("候補の削除", () => {
+  test("候補を削除すると、その候補への可否も消える", async () => {
+    const { db, pollId, adminToken, dec3, dec4 } = await setup();
+    const { editToken } = await join(db, pollId, { name: "田中" });
+    const me = await openResponse(db, pollId, editToken);
+    await me!.setAvailability(dec3, "yes");
+    await me!.setAvailability(dec4, "no");
+    const admin = await openAdmin(db, pollId, adminToken);
+
+    await admin!.removeSlot(dec3);
+
+    const poll = (await readPoll(db, pollId))!;
+    expect(poll.slots.map((s) => s.id)).toEqual([dec4]);
+    expect(poll.responses[0].availabilities).toEqual({ [dec4]: "no" });
+  });
+
+  test("別の日程調整の候補は削除できず、その日程調整の回答も消えない", async () => {
+    const { db, pollId, adminToken } = await setup();
+    const other = await createPoll(db, {
+      title: "新年会",
+      description: "",
+      slots: [{ start: at("2027-01-08T19:00:00+09:00"), end: at("2027-01-08T21:00:00+09:00") }],
+    });
+    const [jan8] = (await readPoll(db, other.pollId))!.slots.map((s) => s.id);
+    const { editToken } = await join(db, other.pollId, { name: "鈴木" });
+    await (await openResponse(db, other.pollId, editToken))!.setAvailability(jan8, "yes");
+    const admin = await openAdmin(db, pollId, adminToken);
+
+    await expect(admin!.removeSlot(jan8)).rejects.toMatchObject({ code: "INVALID_INPUT" });
+    expect((await readPoll(db, other.pollId))!.responses[0].availabilities).toEqual({ [jan8]: "yes" });
+  });
+
+  test("最後の1件の候補も削除できる", async () => {
+    const { db, pollId, adminToken, dec3, dec4 } = await setup();
+    const admin = await openAdmin(db, pollId, adminToken);
+
+    await admin!.removeSlot(dec3);
+    await admin!.removeSlot(dec4);
+
+    expect((await readPoll(db, pollId))!.slots).toEqual([]);
   });
 });
