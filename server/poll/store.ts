@@ -116,3 +116,7 @@ export async function isFinalized(db: Db, pollId: string) {
   const [row] = await db.select({ finalizedSlotId: polls.finalizedSlotId }).from(polls).where(eq(polls.id, pollId));
   return row?.finalizedSlotId != null;
 }
+
+export async function insertSlots(db: Db, pollId: string, newSlots: StoredSlot[]) {
+  await db.insert(slots).values(newSlots.map((s) => ({ id: s.id, pollId, startAt: s.start, endAt: s.end })));
+}

@@ -3,6 +3,7 @@ import { createPoll, join, openAdmin, openResponse, readPoll } from "./index";
 import { createTestDb } from "./test-db";
 
 const at = (iso: string) => new Date(iso).getTime();
+const DAY = 24 * 60 * 60 * 1000;
 
 /** 候補が2件(12/3 と 12/4 の 19:00-21:00)ある日程調整を作る */
 async function setup() {
@@ -140,5 +141,101 @@ describe("確定中は読み取り専用", () => {
     await expect(admin!.updateDetails({ title: "新年会", description: "" })).rejects.toMatchObject({
       code: "FINALIZED",
     });
+  });
+
+  test("確定中は、候補を追加できない", async () => {
+    const { db, pollId, adminToken, dec3 } = await setup();
+    const admin = await openAdmin(db, pollId, adminToken);
+    await admin!.finalize(dec3);
+
+    await expect(
+      admin!.addSlots([{ start: at("2026-12-05T19:00:00+09:00"), end: at("2026-12-05T21:00:00+09:00") }]),
+    ).rejects.toMatchObject({ code: "FINALIZED" });
+  });
+});
+
+describe("候補の追加", () => {
+  test("候補を追加すると時刻順に並び、既存の回答者には未回答として表示される", async () => {
+    const { db, pollId, adminToken, dec3 } = await setup();
+    const { editToken } = await join(db, pollId, { name: "田中" });
+    await (await openResponse(db, pollId, editToken))!.setAvailability(dec3, "yes");
+    const admin = await openAdmin(db, pollId, adminToken);
+
+    await admin!.addSlots([{ start: at("2026-12-02T19:00:00+09:00"), end: at("2026-12-02T21:00:00+09:00") }]);
+
+    const poll = (await readPoll(db, pollId))!;
+    expect(poll.slots.map((s) => s.start)).toEqual([
+      at("2026-12-02T19:00:00+09:00"),
+      at("2026-12-03T19:00:00+09:00"),
+      at("2026-12-04T19:00:00+09:00"),
+    ]);
+    expect(poll.responses[0].availabilities).toEqual({ [dec3]: "yes" });
+  });
+
+  test("既存の候補と完全に一致する追加分は捨て、既存の候補とその回答を残す", async () => {
+    const { db, pollId, adminToken, dec3, dec4 } = await setup();
+    const { editToken } = await join(db, pollId, { name: "田中" });
+    await (await openResponse(db, pollId, editToken))!.setAvailability(dec3, "yes");
+    const admin = await openAdmin(db, pollId, adminToken);
+
+    await admin!.addSlots([
+      { start: at("2026-12-03T19:00:00+09:00"), end: at("2026-12-03T21:00:00+09:00") },
+      { start: at("2026-12-05T19:00:00+09:00"), end: at("2026-12-05T21:00:00+09:00") },
+      { start: at("2026-12-05T19:00:00+09:00"), end: at("2026-12-05T21:00:00+09:00") },
+    ]);
+
+    const poll = (await readPoll(db, pollId))!;
+    expect(poll.slots.map((s) => s.start)).toEqual([
+      at("2026-12-03T19:00:00+09:00"),
+      at("2026-12-04T19:00:00+09:00"),
+      at("2026-12-05T19:00:00+09:00"),
+    ]);
+    expect(poll.slots.slice(0, 2).map((s) => s.id)).toEqual([dec3, dec4]);
+    expect(poll.responses[0].availabilities).toEqual({ [dec3]: "yes" });
+  });
+
+  test("重複をまとめた後の候補が25件を超えるなら、追加できない", async () => {
+    const { db, pollId, adminToken } = await setup();
+    const admin = await openAdmin(db, pollId, adminToken);
+    // 12/10 から毎日 19:00-21:00 の候補を24件(既存の2件と合わせて26件)
+    const slots = Array.from({ length: 24 }, (_, i) => ({
+      start: at("2026-12-10T19:00:00+09:00") + i * DAY,
+      end: at("2026-12-10T21:00:00+09:00") + i * DAY,
+    }));
+
+    await expect(admin!.addSlots(slots)).rejects.toMatchObject({ code: "LIMIT_EXCEEDED" });
+  });
+
+  test("既存の候補との重複を含めて送っても、まとめた後に25件なら追加できる", async () => {
+    const { db, pollId, adminToken } = await setup();
+    const admin = await openAdmin(db, pollId, adminToken);
+    // 既存の12/3と同じ候補1件と、12/10 から毎日の候補23件(まとめると既存の2件と合わせて25件)
+    const slots = [
+      { start: at("2026-12-03T19:00:00+09:00"), end: at("2026-12-03T21:00:00+09:00") },
+      ...Array.from({ length: 23 }, (_, i) => ({
+        start: at("2026-12-10T19:00:00+09:00") + i * DAY,
+        end: at("2026-12-10T21:00:00+09:00") + i * DAY,
+      })),
+    ];
+
+    await admin!.addSlots(slots);
+
+    expect((await readPoll(db, pollId))!.slots).toHaveLength(25);
+  });
+
+  test.each([
+    ["終了が開始より前の候補", [{ start: at("2026-12-05T21:00:00+09:00"), end: at("2026-12-05T19:00:00+09:00") }]],
+    [
+      "101件の候補",
+      Array.from({ length: 101 }, () => ({
+        start: at("2026-12-05T19:00:00+09:00"),
+        end: at("2026-12-05T21:00:00+09:00"),
+      })),
+    ],
+  ])("%sは追加できない", async (_, slots) => {
+    const { db, pollId, adminToken } = await setup();
+    const admin = await openAdmin(db, pollId, adminToken);
+
+    await expect(admin!.addSlots(slots)).rejects.toMatchObject({ code: "INVALID_INPUT" });
   });
 });

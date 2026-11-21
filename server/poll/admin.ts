@@ -1,9 +1,10 @@
 import type { Db } from "@/server/db";
 import { PollError } from "./errors";
 import { assertNotFinalized } from "./guards";
-import { findPollByAdminToken, hasSlot, setFinalizedSlot, updatePollDetails } from "./store";
-import { hashToken } from "./token";
-import { detailsSchema, parse } from "./validation";
+import { findPoll, findPollByAdminToken, hasSlot, insertSlots, setFinalizedSlot, updatePollDetails } from "./store";
+import { MAX_SLOTS, type SlotInput, uniqueSlots } from "./slots";
+import { hashToken, newId } from "./token";
+import { detailsSchema, parse, slotListSchema } from "./validation";
 
 /** 管理トークンを照合して、管理系の操作ができる主催者を返す。トークンが使えなければ null。照合はここだけで行う */
 export async function openAdmin(db: Db, pollId: string, adminToken: string) {
@@ -22,6 +23,17 @@ export async function openAdmin(db: Db, pollId: string, adminToken: string) {
         throw new PollError("INVALID_INPUT", "この日程調整にない候補です");
       }
       await setFinalizedSlot(db, pollId, slotId);
+    },
+    /** 候補を追加する */
+    async addSlots(rawSlots: SlotInput[]) {
+      const added = parse(slotListSchema, rawSlots);
+      await assertNotFinalized(db, pollId);
+      const existing = (await findPoll(db, pollId))!.slots;
+      // 既存の候補を先に並べるので、重複したときは既存の候補(とその回答)が残る
+      const merged = uniqueSlots<SlotInput & { id?: string }>([...existing, ...added]);
+      if (merged.length > MAX_SLOTS) throw new PollError("LIMIT_EXCEEDED", `候補は${MAX_SLOTS}件までです`);
+      const fresh = merged.filter((s) => s.id === undefined);
+      if (fresh.length) await insertSlots(db, pollId, fresh.map((s) => ({ id: newId(), start: s.start, end: s.end })));
     },
     /** 確定を取り消す */
     async unfinalize() {

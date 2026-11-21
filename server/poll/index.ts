@@ -13,6 +13,7 @@ import {
 import { hashToken, newId, newToken } from "./token";
 import { PollError } from "./errors";
 import { assertNotFinalized } from "./guards";
+import { MAX_SLOTS, type SlotInput, uniqueSlots } from "./slots";
 import {
   availabilitySchema,
   createPollSchema,
@@ -25,13 +26,11 @@ export { PollError, type PollErrorCode } from "./errors";
 export { openAdmin, type Admin } from "./admin";
 export type { Availability } from "./ranking";
 
-/** 1つの日程調整の候補の上限(重複をまとめた後の件数) */
-const MAX_SLOTS = 25;
 
 /** 1つの日程調整の回答者の上限。名前だけ登録した人も1人と数える */
 const MAX_RESPONDENTS = 50;
 
-export type SlotInput = { start: number; end: number };
+export type { SlotInput } from "./slots";
 
 export type CreatePollInput = {
   title: string;
@@ -60,17 +59,6 @@ export async function createPoll(db: Db, rawInput: CreatePollInput) {
     slots.map((s) => ({ id: newId(), ...s })),
   );
   return { pollId, adminToken };
-}
-
-/** 開始と終了が完全に一致する候補を1件にまとめる。先に出てきた方を残す */
-function uniqueSlots(input: readonly SlotInput[]) {
-  const seen = new Set<string>();
-  return input.filter((s) => {
-    const key = `${s.start}-${s.end}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
 }
 
 /** 回答者として登録する。この時点ではすべての候補が未回答。編集用トークンは、この戻り値でしか手に入らない(ブラウザに保存する) */
