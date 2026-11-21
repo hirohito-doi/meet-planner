@@ -1,9 +1,8 @@
 import { defineConfig } from "vitest/config";
-import tsconfigPaths from "vite-tsconfig-paths";
 
 // server/ のロジックと純粋関数の単体テスト用。コンポーネントのテストはしないため、Node 環境で動かす
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  resolve: { tsconfigPaths: true },
   test: {
     environment: "node",
     include: ["**/*.test.ts"],
