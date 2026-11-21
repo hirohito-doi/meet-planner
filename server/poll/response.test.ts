@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { createPoll, join, openResponse, readPoll } from "./index";
 import { createTestDb } from "./test-db";
 
@@ -196,5 +196,28 @@ describe("回答者として開く", () => {
     const { editToken } = await join(db, other.pollId, { name: "田中" });
 
     expect(await openResponse(db, pollId, editToken)).toBeNull();
+  });
+});
+
+describe("回答者の並び順", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test("同じ時刻に登録しても、登録した順に並び、名前を変えても順番は変わらない", async () => {
+    const { db, pollId } = await setup();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(at("2026-11-21T12:00:00+09:00"));
+    const names = ["佐藤", "鈴木", "高橋", "田中", "伊藤", "渡辺", "山本", "中村"];
+    const tokens = [];
+    for (const name of names) tokens.push((await join(db, pollId, { name })).editToken);
+
+    const first = await openResponse(db, pollId, tokens[0]);
+    await first!.updateProfile({ name: "佐藤(更新)", comment: "" });
+
+    expect((await readPoll(db, pollId))!.responses.map((r) => r.name)).toEqual([
+      "佐藤(更新)",
+      ...names.slice(1),
+    ]);
   });
 });

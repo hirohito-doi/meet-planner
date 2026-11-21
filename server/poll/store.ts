@@ -1,5 +1,5 @@
 // DB アクセスはこのファイルにまとめる。server/poll の外には見せない (ADR 0004)
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import type { Db } from "@/server/db";
 import { availabilities, polls, responses, slots } from "@/server/db/schema";
 import type { Availability } from "./ranking";
@@ -41,7 +41,8 @@ export async function findPoll(db: Db, pollId: string) {
     .select()
     .from(responses)
     .where(eq(responses.pollId, pollId))
-    .orderBy(asc(responses.createdAt));
+    // 同じミリ秒に登録した回答者の並びは ORDER BY created_at だけでは決まらないため、挿入順(rowid)でも並べる
+    .orderBy(asc(responses.createdAt), asc(sql`rowid`));
   const answerRows = await db
     .select({ responseId: availabilities.responseId, slotId: availabilities.slotId, value: availabilities.value })
     .from(availabilities)
