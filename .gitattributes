@@ -1,0 +1,8 @@
+# 改行コードは LF に統一する(Windows の core.autocrlf の設定に左右されないようにするため)
+* text=auto eol=lf
+
+# バイナリ
+*.ico binary
+*.png binary
+*.jpg binary
+*.sqlite binary
