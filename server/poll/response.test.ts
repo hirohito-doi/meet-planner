@@ -96,6 +96,65 @@ describe("可否の保存", () => {
   });
 });
 
+describe("可否の保存の検証", () => {
+  test("この日程調整にない候補には、可否を保存できない", async () => {
+    const { db, pollId } = await setup();
+    const { editToken } = await join(db, pollId, { name: "田中" });
+    const me = await openResponse(db, pollId, editToken);
+
+    await expect(me!.setAvailability("other-poll-slot", "yes")).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  });
+
+  test("可否が ○△× (yes / maybe / no) と空欄 (null) 以外なら保存できない", async () => {
+    const { db, pollId, dec3 } = await setup();
+    const { editToken } = await join(db, pollId, { name: "田中" });
+    const me = await openResponse(db, pollId, editToken);
+
+    await expect(me!.setAvailability(dec3, "absolutely" as never)).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  });
+});
+
+describe("名前とコメントの保存", () => {
+  test("名前とコメントを保存すると、回答画面に表示される", async () => {
+    const { db, pollId } = await setup();
+    const { editToken } = await join(db, pollId, { name: "田中" });
+    const me = await openResponse(db, pollId, editToken);
+
+    await me!.updateProfile({ name: "田中太郎", comment: "20時以降なら参加できます" });
+
+    expect((await readPoll(db, pollId))?.responses).toMatchObject([
+      { name: "田中太郎", comment: "20時以降なら参加できます" },
+    ]);
+  });
+
+  test.each([
+    ["名前が空", { name: "", comment: "" }],
+    ["名前が空白だけ", { name: "　 ", comment: "" }],
+    ["名前が31文字", { name: "あ".repeat(31), comment: "" }],
+    ["コメントが201文字", { name: "田中", comment: "あ".repeat(201) }],
+  ])("%sなら保存できない", async (_, profile) => {
+    const { db, pollId } = await setup();
+    const { editToken } = await join(db, pollId, { name: "田中" });
+    const me = await openResponse(db, pollId, editToken);
+
+    await expect(me!.updateProfile(profile)).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  });
+
+  test("名前とコメントは前後の空白を取り除いて保存し、取り除いた後の上限の文字数までは保存できる", async () => {
+    const { db, pollId } = await setup();
+    const { editToken } = await join(db, pollId, { name: "田中" });
+    const me = await openResponse(db, pollId, editToken);
+    const name = "あ".repeat(30);
+    const comment = "い".repeat(200);
+
+    await me!.updateProfile({ name: ` ${name} `, comment: `
+${comment}
+` });
+
+    expect((await readPoll(db, pollId))?.responses).toMatchObject([{ name, comment }]);
+  });
+});
+
 describe("回答者として開く", () => {
   test("でたらめな編集用トークンでは開けない", async () => {
     const { db, pollId } = await setup();

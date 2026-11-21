@@ -85,3 +85,15 @@ export async function deleteAvailability(db: Db, responseId: string, slotId: str
     .delete(availabilities)
     .where(and(eq(availabilities.responseId, responseId), eq(availabilities.slotId, slotId)));
 }
+
+export async function hasSlot(db: Db, pollId: string, slotId: string) {
+  const [row] = await db
+    .select({ id: slots.id })
+    .from(slots)
+    .where(and(eq(slots.pollId, pollId), eq(slots.id, slotId)));
+  return row !== undefined;
+}
+
+export async function updateResponseProfile(db: Db, responseId: string, profile: { name: string; comment: string }) {
+  await db.update(responses).set(profile).where(eq(responses.id, responseId));
+}

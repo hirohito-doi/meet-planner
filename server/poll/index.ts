@@ -4,13 +4,22 @@ import {
   deleteAvailability,
   findPoll,
   findResponseByToken,
+  hasSlot,
   insertPoll,
   insertResponse,
   saveAvailability,
+  updateResponseProfile,
 } from "./store";
 import { hashToken, newId, newToken } from "./token";
 import { PollError } from "./errors";
-import { createPollSchema, joinSchema, parse, respondSchema } from "./validation";
+import {
+  availabilitySchema,
+  createPollSchema,
+  joinSchema,
+  parse,
+  profileSchema,
+  respondSchema,
+} from "./validation";
 
 export { PollError, type PollErrorCode } from "./errors";
 export type { Availability } from "./ranking";
@@ -80,9 +89,17 @@ export async function openResponse(db: Db, pollId: string, editToken: string) {
   if (!response) return null;
   return {
     /** 可否を保存する。null なら未回答に戻す */
-    async setAvailability(slotId: string, value: Availability | null) {
+    async setAvailability(slotId: string, rawValue: Availability | null) {
+      const value = parse(availabilitySchema, rawValue);
+      if (!(await hasSlot(db, pollId, slotId))) {
+        throw new PollError("INVALID_INPUT", "この日程調整にない候補です");
+      }
       if (value === null) await deleteAvailability(db, response.id, slotId);
       else await saveAvailability(db, response.id, slotId, value);
+    },
+    /** 名前とコメントを保存する */
+    async updateProfile(rawInput: { name: string; comment: string }) {
+      await updateResponseProfile(db, response.id, parse(profileSchema, rawInput));
     },
   };
 }
