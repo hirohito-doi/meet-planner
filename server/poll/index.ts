@@ -27,6 +27,9 @@ export type { Availability } from "./ranking";
 /** 1つの日程調整の候補の上限(重複をまとめた後の件数) */
 const MAX_SLOTS = 25;
 
+/** 1つの日程調整の回答者の上限。名前だけ登録した人も1人と数える */
+const MAX_RESPONDENTS = 50;
+
 export type SlotInput = { start: number; end: number };
 
 export type CreatePollInput = {
@@ -72,7 +75,11 @@ function uniqueSlots(input: readonly SlotInput[]) {
 /** 回答者として登録する。この時点ではすべての候補が未回答。編集用トークンは、この戻り値でしか手に入らない(ブラウザに保存する) */
 export async function join(db: Db, pollId: string, rawInput: { name: string }) {
   const input = parse(joinSchema, rawInput);
-  if (!(await findPoll(db, pollId))) throw new PollError("NOT_FOUND", "日程調整が見つかりません");
+  const poll = await findPoll(db, pollId);
+  if (!poll) throw new PollError("NOT_FOUND", "日程調整が見つかりません");
+  if (poll.responses.length >= MAX_RESPONDENTS) {
+    throw new PollError("LIMIT_EXCEEDED", `回答者は${MAX_RESPONDENTS}人までです`);
+  }
   const responseId = newId();
   const editToken = newToken();
   await insertResponse(

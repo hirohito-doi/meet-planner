@@ -55,6 +55,29 @@ describe("回答者としての登録", () => {
 
     expect((await readPoll(db, pollId))?.responses).toMatchObject([{ name }]);
   });
+
+  test("50人が登録した後は、51人目は登録できない", async () => {
+    const { db, pollId } = await setup();
+    for (let i = 1; i <= 50; i++) await join(db, pollId, { name: `回答者${i}` });
+
+    await expect(join(db, pollId, { name: "回答者51" })).rejects.toMatchObject({ code: "LIMIT_EXCEEDED" });
+  });
+
+  test("50人に達した後も、登録済みの回答者は自分の回答を変更できる", async () => {
+    const { db, pollId, dec3 } = await setup();
+    const { editToken } = await join(db, pollId, { name: "回答者1" });
+    for (let i = 2; i <= 50; i++) await join(db, pollId, { name: `回答者${i}` });
+
+    const me = await openResponse(db, pollId, editToken);
+    await me!.setAvailability(dec3, "yes");
+    await me!.updateProfile({ name: "田中", comment: "よろしくお願いします" });
+
+    const responses = (await readPoll(db, pollId))!.responses;
+    expect(responses.find((r) => r.name === "田中")).toMatchObject({
+      availabilities: { [dec3]: "yes" },
+      comment: "よろしくお願いします",
+    });
+  });
 });
 
 describe("可否の保存", () => {
