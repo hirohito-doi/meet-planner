@@ -1,5 +1,5 @@
 // DB アクセスはこのファイルにまとめる。server/poll の外には見せない (ADR 0004)
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import type { Db } from "@/server/db";
 import { availabilities, polls, responses, slots } from "@/server/db/schema";
 import type { Availability } from "./ranking";
@@ -62,4 +62,20 @@ export async function findPoll(db: Db, pollId: string) {
       ) as Record<string, Availability>,
     })),
   };
+}
+
+/** 編集用トークンのハッシュから、この日程調整の回答を探す。なければ null */
+export async function findResponseByToken(db: Db, pollId: string, editTokenHash: string) {
+  const [row] = await db
+    .select({ id: responses.id })
+    .from(responses)
+    .where(and(eq(responses.pollId, pollId), eq(responses.editTokenHash, editTokenHash)));
+  return row ?? null;
+}
+
+export async function saveAvailability(db: Db, responseId: string, slotId: string, value: Availability) {
+  await db
+    .insert(availabilities)
+    .values({ responseId, slotId, value })
+    .onConflictDoUpdate({ target: [availabilities.responseId, availabilities.slotId], set: { value } });
 }

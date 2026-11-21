@@ -1,9 +1,9 @@
 import type { Db } from "@/server/db";
 import type { Availability } from "./ranking";
-import { findPoll, insertPoll, insertResponse } from "./store";
+import { findPoll, findResponseByToken, insertPoll, insertResponse, saveAvailability } from "./store";
 import { hashToken, newId, newToken } from "./token";
 import { PollError } from "./errors";
-import { createPollSchema, parse, respondSchema } from "./validation";
+import { createPollSchema, joinSchema, parse, respondSchema } from "./validation";
 
 export { PollError, type PollErrorCode } from "./errors";
 export type { Availability } from "./ranking";
@@ -51,6 +51,31 @@ function uniqueSlots(input: readonly SlotInput[]) {
     seen.add(key);
     return true;
   });
+}
+
+/** 回答者として登録する。この時点ではすべての候補が未回答。編集用トークンは、この戻り値でしか手に入らない(ブラウザに保存する) */
+export async function join(db: Db, pollId: string, rawInput: { name: string }) {
+  const input = parse(joinSchema, rawInput);
+  if (!(await findPoll(db, pollId))) throw new PollError("NOT_FOUND", "日程調整が見つかりません");
+  const responseId = newId();
+  const editToken = newToken();
+  await insertResponse(
+    db,
+    { id: responseId, pollId, name: input.name, comment: "", editTokenHash: hashToken(editToken), createdAt: Date.now() },
+    {},
+  );
+  return { responseId, editToken };
+}
+
+/** 編集用トークンを照合して、自分の回答を変更できる回答者を返す。トークンが使えなければ null */
+export async function openResponse(db: Db, pollId: string, editToken: string) {
+  const response = await findResponseByToken(db, pollId, hashToken(editToken));
+  if (!response) return null;
+  return {
+    async setAvailability(slotId: string, value: Availability) {
+      await saveAvailability(db, response.id, slotId, value);
+    },
+  };
 }
 
 export type RespondInput = {
