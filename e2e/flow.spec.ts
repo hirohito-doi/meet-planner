@@ -22,7 +22,11 @@ test("日程調整を作成し、回答して、確定できる", async ({ page 
   // 作成
   await page.goto("/");
   await page.getByLabel("タイトル(必須)").fill("忘年会");
-  await page.locator('input[type="date"]').fill("2026-12-03");
+  // カレンダーは常に表示されていて、日付の入力欄と連動する
+  await page.locator('input[type="date"]').fill("2026-12-01");
+  await expect(page.getByText("2026年12月")).toBeVisible();
+  await page.getByRole("button", { name: "2026-12-03" }).click();
+  await expect(page.locator('input[type="date"]')).toHaveValue("2026-12-03");
   await page.getByRole("button", { name: "日付を追加" }).click();
 
   await scrollGridIntoView(page);

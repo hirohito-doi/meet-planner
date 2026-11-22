@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { MonthCalendar } from "./month-calendar";
 import { SlotGrid } from "./slot-grid";
 import type { useDraftSlots } from "./use-draft-slots";
 
@@ -20,6 +21,7 @@ export function SlotSection({
   return (
     <section className="space-y-2">
       <h2 className="text-sm font-medium">候補</h2>
+      <MonthCalendar value={date} onSelect={setDate} added={dates} />
       <div className="flex gap-2">
         <input
           type="date"
@@ -39,25 +41,21 @@ export function SlotSection({
           日付を追加
         </button>
       </div>
-      {dates.length === 0 ? (
-        <p className="text-sm text-zinc-500">日付を追加すると、表の上で候補を作れます。</p>
-      ) : (
-        <>
-          <p className="text-xs text-zinc-500">
-            PC はドラッグ、スマホは開始と終了のマスを順にタップして候補を作ります。候補を選ぶと削除できます。
-          </p>
-          <SlotGrid
-            dates={dates}
-            drafts={drafts}
-            locked={locked}
-            onCreate={addSlot}
-            onDelete={removeSlot}
-            onRemoveDate={removeDate}
-            fixedDates={fixedDates}
-          />
-          <p className="text-xs text-zinc-500">新しい候補: {drafts.length}件</p>
-        </>
-      )}
+      <p className="text-xs text-zinc-500">
+        {dates.length === 0
+          ? "日付を追加すると、表に列ができます。"
+          : "PC はドラッグ、スマホは開始と終了のマスを順にタップして候補を作ります。候補を選ぶと削除できます。"}
+      </p>
+      <SlotGrid
+        dates={dates}
+        drafts={drafts}
+        locked={locked}
+        onCreate={addSlot}
+        onDelete={removeSlot}
+        onRemoveDate={removeDate}
+        fixedDates={fixedDates}
+      />
+      <p className="text-xs text-zinc-500">新しい候補: {drafts.length}件</p>
     </section>
   );
 }

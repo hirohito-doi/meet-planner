@@ -173,6 +173,15 @@ export function SlotGrid({
               </div>
             ))}
           </div>
+          {/* 日付がまだないときも、時刻の目盛りと空の列を出しておく */}
+          {dates.length === 0 && (
+            <div className="flex-1 border-l border-zinc-300">
+              <div className="sticky top-0 z-10 flex h-10 items-center justify-center border-b border-zinc-300 bg-white text-sm text-zinc-400">
+                日付を追加してください
+              </div>
+              <div style={{ height: ROWS * ROW_HEIGHT }} />
+            </div>
+          )}
           {dates.map((date) => (
             <div key={date} className="min-w-20 max-w-[50%] flex-1 basis-0 border-l border-zinc-300 sm:min-w-24">
               <div className="sticky top-0 z-10 flex h-10 items-center justify-center gap-1 border-b border-zinc-300 bg-white text-sm">
