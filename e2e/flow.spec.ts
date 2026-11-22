@@ -1,29 +1,8 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { cellPoint, openNextMonth, scrollGridIntoView } from "./helpers";
 
 // 主要な流れ: 主催者が日程調整を作る → 回答者が回答する → 主催者が確定する
 // 表の1マスは 22px、初期表示は 8:00 の行(28行目)が上端。10:00 は32行目、13:00 は38行目
-
-const ROW_HEIGHT = 22;
-
-/** 表をページの上端までスクロールする(画面の外のマスは押せないため) */
-async function scrollGridIntoView(page: Page) {
-  await page.getByLabel("12/3(木)の候補の表").evaluate((el) => el.closest(".overflow-auto")?.scrollIntoView({ block: "start" }));
-}
-
-/** 今日を 2026-11-22 に固定して作成画面を開き、カレンダーを 2026年12月 に進める */
-async function openNextMonth(page: Page) {
-  await page.clock.setFixedTime(new Date("2026-11-22T12:00:00+09:00"));
-  await page.goto("/");
-  await expect(page.getByText("2026年11月")).toBeVisible();
-  await page.getByRole("button", { name: "次の月" }).click();
-  await expect(page.getByText("2026年12月")).toBeVisible();
-}
-
-async function cellPoint(page: Page, row: number, day = "12/3(木)") {
-  const box = await page.getByLabel(`${day}の候補の表`).boundingBox();
-  if (!box) throw new Error("候補の表が見つかりません");
-  return { x: box.x + 20, y: box.y + row * ROW_HEIGHT + ROW_HEIGHT / 2 };
-}
 
 test("日程調整を作成し、回答して、確定できる", async ({ page }, testInfo) => {
   const mobile = testInfo.project.name === "mobile";

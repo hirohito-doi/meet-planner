@@ -1,7 +1,16 @@
 "use client";
 
 // 回答画面。docs/spec.md「回答」: 名前を登録してから、セルをタップするたびに自動で保存する
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  useTransition,
+} from "react";
 import { formatSlot } from "@/lib/jst";
 import type { Availability, PollView } from "@/server/poll";
 import { joinAction, renameAction, setAvailabilityAction } from "./actions";
@@ -42,7 +51,7 @@ const NEXT: Record<"none" | Availability, Cell> = { none: "yes", yes: "maybe", m
 /** 同じセルを素早く何度もタップしたときは、最後の値だけを保存する */
 const SAVE_DELAY = 400;
 
-export function ResponseTable({ poll }: { poll: PollView }) {
+export function ResponseTable({ poll }: { poll: Omit<PollView, "ranking"> }) {
   const { me, loaded, saveMe } = useStoredMe(poll.id);
   const inTransition = useInTransition();
   // 主催者が回答を削除した後などは、保存したトークンが使えない。消して名前の入力からやり直してもらう
@@ -57,6 +66,8 @@ export function ResponseTable({ poll }: { poll: PollView }) {
   const finalized = poll.finalizedSlotId !== null;
   const [overrides, setOverrides] = useState<Record<string, Cell>>({});
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  /** マスごとのタップの番号。保存が終わったとき、その後にタップがなければ表示を保存済みの値に戻す */
+  const tapCounts = useRef<Record<string, number>>({});
   // 保存待ち(タップしてから送るまでの間)のままページを閉じると最後のタップが失われるので、確認を出す
   const hasUnsaved = Object.keys(overrides).length > 0;
   useEffect(() => {
@@ -82,14 +93,22 @@ export function ResponseTable({ poll }: { poll: PollView }) {
     const current = slotId in overrides ? overrides[slotId] : (myResponse.availabilities[slotId] ?? null);
     const next = NEXT[current ?? "none"];
     setOverrides((o) => ({ ...o, [slotId]: next }));
+    const tapCount = (tapCounts.current[slotId] ?? 0) + 1;
+    tapCounts.current[slotId] = tapCount;
     clearTimeout(timers.current[slotId]);
     timers.current[slotId] = setTimeout(async () => {
       const result = await inTransition(() => setAvailabilityAction(poll.id, me.editToken, slotId, next));
-      setOverrides((o) => {
-        const rest = { ...o };
-        delete rest[slotId];
-        return rest;
-      });
+      // 保存している間に同じマスがまたタップされていたら、そのタップの表示と保存待ちを残す
+      if (tapCounts.current[slotId] !== tapCount) return;
+      // 保存後の画面のデータと同時に反映するため、transition の中で消す。
+      // await の後の更新は transition の外として扱われ、古いデータが一瞬見えてしまう
+      startTransition(() =>
+        setOverrides((o) => {
+          const rest = { ...o };
+          delete rest[slotId];
+          return rest;
+        }),
+      );
       if (!result.ok) handleFailure({ ...result, message: `保存できませんでした。${result.message}` });
       else setError(null);
     }, SAVE_DELAY);

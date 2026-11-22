@@ -154,17 +154,16 @@ export function SlotGrid({
     touchRef.current = null;
     if (!touch || Math.hypot(e.clientX - touch.x, e.clientY - touch.y) > TAP_SLOP) return;
     const { date, row, blockKey } = touch;
-    if (blockKey && isSelectable(blockKey)) {
+    // 開始を選んだ後のタップは、候補の上でも終了として扱う
+    if (pendingStart && canCreate) {
+      create(pendingStart.date, date, pendingStart.row, row);
+      setPendingStart(null);
+    } else if (blockKey && isSelectable(blockKey)) {
       setPendingStart(null);
       setSelected((current) => (current === blockKey ? null : blockKey));
     } else if (selected) {
       setSelected(null);
-    } else if (!canCreate) {
-      return;
-    } else if (pendingStart) {
-      create(pendingStart.date, date, pendingStart.row, row);
-      setPendingStart(null);
-    } else {
+    } else if (canCreate) {
       setPendingStart({ date, row });
     }
   };

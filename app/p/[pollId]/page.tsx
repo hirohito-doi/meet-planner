@@ -19,5 +19,7 @@ export default function Page({ params }: PageProps<"/p/[pollId]">) {
 async function Poll({ pollId }: { pollId: string }) {
   const poll = await readPoll(await getDb(), pollId);
   if (!poll) notFound();
-  return <ResponseTable poll={poll} />;
+  // スコアは管理画面だけで使う。回答者のブラウザには送らない(docs/spec.md「回答画面」)
+  const { ranking, ...view } = poll;
+  return <ResponseTable poll={view} />;
 }
