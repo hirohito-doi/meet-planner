@@ -34,6 +34,8 @@ export const responses = sqliteTable(
     /** 編集用トークンの SHA-256 (ADR 0001) */
     editTokenHash: text("edit_token_hash").notNull().unique(),
     createdAt: integer("created_at").notNull(),
+    /** 日程調整の中で登録した順番(0から)。同じミリ秒に登録しても並びが決まるように持つ */
+    joinOrder: integer("join_order").notNull().default(0),
   },
   (t) => [index("responses_poll_id_idx").on(t.pollId)],
 );

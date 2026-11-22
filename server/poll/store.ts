@@ -1,16 +1,21 @@
 // DB アクセスはこのファイルにまとめる。server/poll の外には見せない (ADR 0004)
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, max } from "drizzle-orm";
 import type { Db } from "@/server/db";
 import { availabilities, polls, responses, slots } from "@/server/db/schema";
 import type { Availability } from "./ranking";
 
 export type StoredSlot = { id: string; start: number; end: number };
 
+/** 回答者を、その日程調整で最後の登録順にして加える */
 export async function insertResponse(
   db: Db,
   response: { id: string; pollId: string; name: string; editTokenHash: string; createdAt: number },
 ) {
-  await db.insert(responses).values(response);
+  const [last] = await db
+    .select({ joinOrder: max(responses.joinOrder) })
+    .from(responses)
+    .where(eq(responses.pollId, response.pollId));
+  await db.insert(responses).values({ ...response, joinOrder: (last?.joinOrder ?? -1) + 1 });
 }
 
 export async function insertPoll(
@@ -36,8 +41,7 @@ export async function findPoll(db: Db, pollId: string) {
     .select()
     .from(responses)
     .where(eq(responses.pollId, pollId))
-    // 同じミリ秒に登録した回答者の並びは ORDER BY created_at だけでは決まらないため、挿入順(rowid)でも並べる
-    .orderBy(asc(responses.createdAt), asc(sql`rowid`));
+    .orderBy(asc(responses.joinOrder), asc(responses.createdAt), asc(responses.id));
   const answerRows = await db
     .select({ responseId: availabilities.responseId, slotId: availabilities.slotId, value: availabilities.value })
     .from(availabilities)
