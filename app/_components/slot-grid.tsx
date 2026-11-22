@@ -191,35 +191,35 @@ export function SlotGrid({
 
   return (
     <div ref={rootRef} className="select-none">
-      <div ref={scrollRef} className="relative max-h-[60vh] overflow-auto rounded border border-zinc-300">
+      <div ref={scrollRef} className="relative max-h-[60vh] overflow-auto rounded border border-slate-300">
         <div className="flex min-w-full">
           {/* 時刻の目盛り */}
           <div className="sticky left-0 z-20 w-12 shrink-0 bg-white">
-            <div className="sticky top-0 z-10 h-10 border-b border-zinc-300 bg-white" />
+            <div className="sticky top-0 z-10 h-10 border-b border-slate-300 bg-white" />
             {Array.from({ length: ROWS }, (_, row) => (
-              <div key={row} style={{ height: ROW_HEIGHT }} className="pr-1 text-right text-[10px] leading-none text-zinc-500">
+              <div key={row} style={{ height: ROW_HEIGHT }} className="pr-1 text-right text-[10px] leading-none text-slate-500">
                 {row % 2 === 0 ? rowLabel(row) : ""}
               </div>
             ))}
           </div>
           {/* 日付がまだないときも、時刻の目盛りと空の列を出しておく */}
           {dates.length === 0 && (
-            <div className="flex-1 border-l border-zinc-300">
-              <div className="sticky top-0 z-10 flex h-10 items-center justify-center border-b border-zinc-300 bg-white text-sm text-zinc-400">
+            <div className="flex-1 border-l border-slate-300">
+              <div className="sticky top-0 z-10 flex h-10 items-center justify-center border-b border-slate-300 bg-white text-sm text-slate-400">
                 日付を選んでください
               </div>
               <div style={{ height: ROWS * ROW_HEIGHT }} />
             </div>
           )}
           {dates.map((date) => (
-            <div key={date} className="min-w-20 max-w-[50%] flex-1 basis-0 border-l border-zinc-300 sm:min-w-24">
-              <div className="sticky top-0 z-10 flex h-10 items-center justify-center gap-1 border-b border-zinc-300 bg-white text-sm">
+            <div key={date} className="min-w-20 max-w-[50%] flex-1 basis-0 border-l border-slate-300 sm:min-w-24">
+              <div className="sticky top-0 z-10 flex h-10 items-center justify-center gap-1 border-b border-slate-300 bg-white text-sm">
                 {formatDay(jstMidnight(date))}
                 {onRemoveDate && !fixedDates.includes(date) && (
                   <button
                     type="button"
                     aria-label={`${formatDay(jstMidnight(date))}を外す`}
-                    className="flex size-8 items-center justify-center rounded text-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"
+                    className="flex size-8 items-center justify-center rounded text-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800"
                     onClick={() => onRemoveDate(date)}
                   >
                     ×
@@ -247,8 +247,8 @@ export function SlotGrid({
                   <div
                     key={row}
                     style={{ top: row * ROW_HEIGHT, height: ROW_HEIGHT }}
-                    className={`absolute inset-x-0 border-b ${row % 2 === 1 ? "border-zinc-200" : "border-zinc-100"} ${
-                      row < 12 || row >= 60 ? "bg-zinc-50" : ""
+                    className={`absolute inset-x-0 border-b ${row % 2 === 1 ? "border-slate-200" : "border-slate-100"} ${
+                      row < 12 || row >= 60 ? "bg-slate-50" : ""
                     }`}
                   />
                 ))}
@@ -284,10 +284,10 @@ export function SlotGrid({
         </div>
       </div>
       {selected && (
-        <div data-slot-grid-ui className="fixed inset-x-0 bottom-0 z-30 flex justify-center border-t border-zinc-300 bg-white p-3">
+        <div data-slot-grid-ui className="fixed inset-x-0 bottom-0 z-30 flex justify-center border-t border-slate-300 bg-white p-3">
           <button
             type="button"
-            className="rounded bg-red-600 px-4 py-2 text-white"
+            className="rounded-lg bg-red-600 px-5 py-2.5 font-bold text-white shadow-sm hover:bg-red-700"
             onClick={() => {
               if (isDraft(selected)) onDelete(selected);
               else onDeleteSaved?.(selected);
@@ -311,7 +311,7 @@ function rowLabel(row: number) {
 }
 
 function blockStyle(kind: Block["kind"], selected: boolean) {
-  if (kind === "saved") return selected ? "border-zinc-800 bg-zinc-600 text-white ring-2 ring-zinc-300" : "border-zinc-400 bg-zinc-200 text-zinc-600";
-  if (kind === "preview") return "border-dashed border-blue-500 bg-blue-100/70 text-blue-900";
-  return selected ? "border-blue-900 bg-blue-700 text-white ring-2 ring-blue-300" : "border-blue-600 bg-blue-500 text-white";
+  if (kind === "saved") return selected ? "border-slate-800 bg-slate-600 text-white ring-2 ring-slate-300" : "border-slate-400 bg-slate-200 text-slate-600";
+  if (kind === "preview") return "border-dashed border-slate-500 bg-slate-200/70 text-slate-900";
+  return selected ? "border-slate-950 bg-slate-950 text-white ring-2 ring-slate-400" : "border-slate-700 bg-slate-700 text-white";
 }

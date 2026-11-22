@@ -42,21 +42,21 @@ export function MonthCalendar({
   };
 
   return (
-    <div className="w-72 rounded border border-zinc-300 p-2">
+    <div className="w-72 rounded border border-slate-300 p-2">
       <div className="mb-1 flex items-center justify-between">
-        <button type="button" aria-label="前の月" onClick={() => move(-1)} className="flex size-10 items-center justify-center rounded border border-zinc-300 text-xl hover:bg-zinc-100">
+        <button type="button" aria-label="前の月" onClick={() => move(-1)} className="flex size-10 items-center justify-center rounded border border-slate-300 text-xl hover:bg-slate-100">
           ‹
         </button>
         <span className="text-sm font-medium">
           {year}年{month + 1}月
         </span>
-        <button type="button" aria-label="次の月" onClick={() => move(1)} className="flex size-10 items-center justify-center rounded border border-zinc-300 text-xl hover:bg-zinc-100">
+        <button type="button" aria-label="次の月" onClick={() => move(1)} className="flex size-10 items-center justify-center rounded border border-slate-300 text-xl hover:bg-slate-100">
           ›
         </button>
       </div>
       <div className="grid grid-cols-7 text-center text-xs">
         {WEEKDAYS.map((w, i) => (
-          <span key={w} className={`py-1 ${i === 0 ? "text-red-600" : i === 6 ? "text-blue-600" : "text-zinc-500"}`}>
+          <span key={w} className={`py-1 ${i === 0 ? "text-red-600" : i === 6 ? "text-blue-600" : "text-slate-500"}`}>
             {w}
           </span>
         ))}
@@ -99,14 +99,14 @@ function DayButton({
   onToggle: (date: string) => void;
 }) {
   const color = fixed
-    ? "bg-zinc-300 text-zinc-700"
+    ? "bg-slate-300 text-slate-700"
     : added
-      ? "bg-blue-600 text-white"
+      ? "bg-slate-800 text-white"
       : weekday === 0
-        ? "text-red-600 hover:bg-zinc-100"
+        ? "text-red-600 hover:bg-slate-100"
         : weekday === 6
-          ? "text-blue-600 hover:bg-zinc-100"
-          : "hover:bg-zinc-100";
+          ? "text-blue-600 hover:bg-slate-100"
+          : "hover:bg-slate-100";
   return (
     <button
       type="button"

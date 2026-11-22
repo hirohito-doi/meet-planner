@@ -63,13 +63,13 @@ test("スマホで開始を選んだ後は、既存の候補の上をタップ�
   const to = await cellPoint(page, 35);
   await page.touchscreen.tap(from.x, from.y);
   await page.touchscreen.tap(to.x, to.y);
-  await expect(page.getByText("10:00-12:00")).toBeVisible();
+  await expect(page.getByText("10:00-12:00", { exact: true })).toBeVisible();
 
   // 9:00 を開始に選び、10:00-12:00 の候補の上(10:30)を終了としてタップする
   const start = await cellPoint(page, 30);
   const end = await cellPoint(page, 33);
   await page.touchscreen.tap(start.x, start.y);
   await page.touchscreen.tap(end.x, end.y);
-  await expect(page.getByText("9:00-11:00")).toBeVisible();
-  await expect(page.getByText("新しい候補: 2件")).toBeVisible();
+  await expect(page.getByText("9:00-11:00", { exact: true })).toBeVisible();
+  await expect(page.getByText("候補 2 件")).toBeVisible();
 });

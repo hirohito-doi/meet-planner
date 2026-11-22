@@ -129,7 +129,7 @@ export function ResponseTable({ poll }: { poll: Omit<PollView, "ranking"> }) {
     <div className="space-y-6">
       <header className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">{poll.title}</h1>
-        {poll.description && <p className="whitespace-pre-wrap text-zinc-700">{poll.description}</p>}
+        {poll.description && <p className="whitespace-pre-wrap text-slate-700">{poll.description}</p>}
       </header>
 
       {finalizedSlot && (
@@ -141,15 +141,15 @@ export function ResponseTable({ poll }: { poll: Omit<PollView, "ranking"> }) {
       {error && <p className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-red-700">{error}</p>}
 
       {poll.slots.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-zinc-300 px-4 py-6 text-center text-zinc-500">
+        <p className="rounded-lg border border-dashed border-slate-300 px-4 py-6 text-center text-slate-500">
           候補がまだありません。
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-zinc-300 shadow-sm">
+        <div className="overflow-x-auto rounded-lg border border-slate-300 shadow-sm">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-zinc-100">
-                <th className="sticky left-0 z-10 border-b-2 border-r border-zinc-300 bg-zinc-100 px-3 py-2 text-left text-sm font-bold text-zinc-700">
+              <tr className="bg-slate-100">
+                <th className="sticky left-0 z-10 border-b-2 border-r border-slate-300 bg-slate-100 px-3 py-2 text-left text-sm font-bold text-slate-700">
                   候補
                 </th>
                 {poll.responses.map((r) => {
@@ -157,8 +157,8 @@ export function ResponseTable({ poll }: { poll: Omit<PollView, "ranking"> }) {
                   return (
                     <th
                       key={r.id}
-                      className={`min-w-16 border-b-2 border-l border-zinc-300 px-2 py-2 text-sm font-bold ${
-                        mine ? "bg-slate-200 text-slate-900" : "text-zinc-800"
+                      className={`min-w-16 border-b-2 border-l border-slate-300 px-2 py-2 text-sm font-bold ${
+                        mine ? "bg-slate-200 text-slate-900" : "text-slate-800"
                       }`}
                     >
                       {mine && !finalized ? (
@@ -184,14 +184,14 @@ export function ResponseTable({ poll }: { poll: Omit<PollView, "ranking"> }) {
                 return (
                   <tr key={slot.id} className={isFinalized ? "bg-emerald-100" : ""}>
                     <td
-                      className={`sticky left-0 z-10 whitespace-nowrap border-r border-t border-zinc-300 px-3 py-2 ${
+                      className={`sticky left-0 z-10 whitespace-nowrap border-r border-t border-slate-300 px-3 py-2 ${
                         isFinalized ? "bg-emerald-100" : "bg-white"
                       }`}
                     >
                       <div className="flex items-center gap-2">
                         <div>
-                          <div className="text-sm font-bold text-zinc-900">{day}</div>
-                          <div className="text-sm text-zinc-700">{time}</div>
+                          <div className="text-sm font-bold text-slate-900">{day}</div>
+                          <div className="text-sm text-slate-700">{time}</div>
                         </div>
                         {isFinalized && (
                           <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-bold text-white">確定</span>
@@ -204,7 +204,7 @@ export function ResponseTable({ poll }: { poll: Omit<PollView, "ranking"> }) {
                       return (
                         <td
                           key={r.id}
-                          className={`border-t border-zinc-300 p-0 text-center text-2xl font-bold ${
+                          className={`border-t border-slate-300 p-0 text-center text-2xl font-bold ${
                             mine ? "border-x-2 border-x-slate-400" : "border-l"
                           } ${value ? TONE[value] : ""}`}
                         >
@@ -218,7 +218,7 @@ export function ResponseTable({ poll }: { poll: Omit<PollView, "ranking"> }) {
                               {value ? (
                                 <Mark value={value} />
                               ) : (
-                                <span className="h-full w-full rounded border-2 border-dashed border-zinc-300" />
+                                <span className="h-full w-full rounded border-2 border-dashed border-slate-300" />
                               )}
                             </button>
                           ) : (
@@ -303,16 +303,16 @@ function NameDialog({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="名前"
-          className="w-full rounded-lg border-2 border-zinc-300 px-3 py-3 text-lg focus:border-zinc-600 focus:outline-none"
+          className="w-full rounded-lg border-2 border-slate-300 px-3 py-3 text-lg focus:border-slate-600 focus:outline-none"
         />
         {message && <p className="text-sm text-red-600">{message}</p>}
         <div className="flex justify-end gap-2">
           {onCancel && (
-            <button type="button" onClick={onCancel} className="rounded-lg border border-zinc-300 px-4 py-2.5">
+            <button type="button" onClick={onCancel} className="rounded-lg border border-slate-300 px-4 py-2.5">
               キャンセル
             </button>
           )}
-          <button type="submit" disabled={pending || !name.trim()} className="rounded-lg bg-zinc-800 px-5 py-2.5 font-bold text-white hover:bg-zinc-700 disabled:opacity-40">
+          <button type="submit" disabled={pending || !name.trim()} className="rounded-lg bg-slate-800 px-5 py-2.5 font-bold text-white hover:bg-slate-700 disabled:opacity-40">
             {submitLabel}
           </button>
         </div>

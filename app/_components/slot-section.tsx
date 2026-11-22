@@ -4,36 +4,30 @@ import { MonthCalendar } from "./month-calendar";
 import { SlotGrid } from "./slot-grid";
 import type { useDraftSlots } from "./use-draft-slots";
 
-/** 日付を選び、表の上で候補を作る */
+/** 日付を選び、表の上で候補を作る(管理画面の候補の追加と削除) */
 export function SlotSection({
   dates,
   drafts,
   saved,
   fixedDates,
-  addDate,
   removeDate,
+  toggleDate,
   addSlot,
   removeSlot,
   onDeleteSaved,
   canCreate = true,
 }: ReturnType<typeof useDraftSlots> &
   Pick<React.ComponentProps<typeof SlotGrid>, "saved" | "fixedDates" | "onDeleteSaved" | "canCreate">) {
-  /** 列を外す。その列で作った候補があるときは、確かめてから外す */
-  const removeDateWithConfirm = (target: string) => {
-    const count = drafts.filter((d) => d.date === target).length;
-    if (count === 0 || confirm(`この日付の新しい候補(${count}件)も消えます。外しますか?`)) removeDate(target);
-  };
   return (
-    <section className="space-y-2">
-      <h2 className="text-sm font-medium">候補</h2>
+    <div className="space-y-2">
       {canCreate && (
         <MonthCalendar
           added={dates}
           fixed={fixedDates ?? []}
-          onToggle={(d) => (dates.includes(d) ? removeDateWithConfirm(d) : addDate(d))}
+          onToggle={toggleDate}
         />
       )}
-      <p className="text-xs text-zinc-500">
+      <p className="text-xs text-slate-500">
         {!canCreate
           ? "確定中は候補を追加できません。候補を選ぶと削除できます。"
           : dates.length === 0
@@ -46,12 +40,12 @@ export function SlotSection({
         saved={saved}
         onCreate={addSlot}
         onDelete={removeSlot}
-        onRemoveDate={removeDateWithConfirm}
+        onRemoveDate={removeDate}
         fixedDates={fixedDates}
         onDeleteSaved={onDeleteSaved}
         canCreate={canCreate}
       />
-      {canCreate && <p className="text-xs text-zinc-500">新しい候補: {drafts.length}件</p>}
-    </section>
+      {canCreate && <p className="text-xs text-slate-500">新しい候補: {drafts.length}件</p>}
+    </div>
   );
 }
