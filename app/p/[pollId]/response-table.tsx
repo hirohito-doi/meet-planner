@@ -75,8 +75,6 @@ export function ResponseTable({ poll }: { poll: PollView }) {
     return result.ok;
   };
 
-  const maxScore = Math.max(0, ...poll.ranking.map((r) => r.score));
-  const scoreOf = new Map(poll.ranking.map((r) => [r.slotId, r.score]));
   const finalizedSlot = poll.slots.find((s) => s.id === poll.finalizedSlotId);
   const needsName = loaded && !finalized && !myResponse;
 
@@ -113,16 +111,13 @@ export function ResponseTable({ poll }: { poll: PollView }) {
                     )}
                   </th>
                 ))}
-                <th className="px-2 py-1 font-medium">スコア</th>
               </tr>
             </thead>
             <tbody>
               {poll.slots.map((slot) => {
-                const score = scoreOf.get(slot.id) ?? 0;
-                const best = maxScore > 0 && score === maxScore;
                 return (
-                  <tr key={slot.id} className={best ? "bg-amber-50" : ""}>
-                    <td className="sticky left-0 whitespace-nowrap border-t border-zinc-200 bg-inherit px-2 py-2">
+                  <tr key={slot.id}>
+                    <td className="sticky left-0 whitespace-nowrap border-t border-zinc-200 bg-white px-2 py-2">
                       {slot.id === poll.finalizedSlotId && "✅ "}
                       {formatSlot(slot)}
                     </td>
@@ -146,7 +141,6 @@ export function ResponseTable({ poll }: { poll: PollView }) {
                         </td>
                       );
                     })}
-                    <td className={`border-t border-zinc-200 px-2 py-2 text-center ${best ? "font-bold" : ""}`}>{score}</td>
                   </tr>
                 );
               })}

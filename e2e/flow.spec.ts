@@ -65,10 +65,13 @@ test("日程調整を作成し、回答して、確定できる", async ({ page 
   await page.getByPlaceholder("名前").fill("田中");
   await page.getByRole("button", { name: "回答を始める" }).click();
   const cell = page.getByRole("button", { name: "12/3(木) 10:00-12:00の可否" });
+  // 最後のタップから少し待って保存される。保存の通信が終わるまで待つ
+  const answerSaved = page.waitForResponse(
+    (r) => r.request().method() === "POST" && (r.request().postData() ?? "").includes('"yes"') && r.ok(),
+  );
   await cell.click();
   await expect(cell).toHaveText("○");
-  // 保存が終わるとスコアに反映される(○ = 2点)
-  await expect(page.getByRole("row", { name: /10:00-12:00/ }).getByRole("cell").last()).toHaveText("2");
+  await answerSaved;
 
   // 自動で保存されているので、開き直しても残っている(名前の入力も求められない)
   await page.reload();
