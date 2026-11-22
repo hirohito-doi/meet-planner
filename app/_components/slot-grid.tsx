@@ -177,7 +177,7 @@ export function SlotGrid({
           {dates.length === 0 && (
             <div className="flex-1 border-l border-zinc-300">
               <div className="sticky top-0 z-10 flex h-10 items-center justify-center border-b border-zinc-300 bg-white text-sm text-zinc-400">
-                日付を追加してください
+                日付を選んでください
               </div>
               <div style={{ height: ROWS * ROW_HEIGHT }} />
             </div>

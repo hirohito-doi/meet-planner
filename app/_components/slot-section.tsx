@@ -18,10 +18,20 @@ export function SlotSection({
 }: ReturnType<typeof useDraftSlots> &
   Pick<React.ComponentProps<typeof SlotGrid>, "locked" | "fixedDates">) {
   const [date, setDate] = useState("");
+  /** 列を外す。その列で作った候補があるときは、確かめてから外す */
+  const removeDateWithConfirm = (target: string) => {
+    const count = drafts.filter((d) => d.date === target).length;
+    if (count === 0 || confirm(`この日付の新しい候補(${count}件)も消えます。外しますか?`)) removeDate(target);
+  };
   return (
     <section className="space-y-2">
       <h2 className="text-sm font-medium">候補</h2>
-      <MonthCalendar value={date} onSelect={setDate} added={dates} />
+      <MonthCalendar
+        focus={date}
+        added={dates}
+        fixed={fixedDates ?? []}
+        onToggle={(d) => (dates.includes(d) ? removeDateWithConfirm(d) : addDate(d))}
+      />
       <div className="flex gap-2">
         <input
           type="date"
@@ -43,7 +53,7 @@ export function SlotSection({
       </div>
       <p className="text-xs text-zinc-500">
         {dates.length === 0
-          ? "日付を追加すると、表に列ができます。"
+          ? "カレンダーで日付を選ぶと、表に列ができます。"
           : "PC はドラッグ、スマホは開始と終了のマスを順にタップして候補を作ります。候補を選ぶと削除できます。"}
       </p>
       <SlotGrid
@@ -52,7 +62,7 @@ export function SlotSection({
         locked={locked}
         onCreate={addSlot}
         onDelete={removeSlot}
-        onRemoveDate={removeDate}
+        onRemoveDate={removeDateWithConfirm}
         fixedDates={fixedDates}
       />
       <p className="text-xs text-zinc-500">新しい候補: {drafts.length}件</p>
