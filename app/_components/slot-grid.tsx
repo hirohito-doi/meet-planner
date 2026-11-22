@@ -3,7 +3,7 @@
 // 候補を作る表。docs/spec.md「候補の作成」「表のレイアウト」
 import { useEffect, useRef, useState } from "react";
 import { formatClockInColumn, formatDay, jstDate, jstMidnight } from "@/lib/jst";
-import { layout, ROWS, slotFromRows } from "@/lib/slot-grid";
+import { columnsBetween, layout, ROWS, slotFromRows } from "@/lib/slot-grid";
 
 /** 画面の中だけにある、まだ保存していない候補。作った列(date)を覚えておく */
 export type DraftSlot = { key: string; date: string; start: number; end: number };
@@ -17,7 +17,8 @@ const INITIAL_ROW = (8 * 60 + 6 * 60) / 30;
 const TAP_SLOP = 10;
 
 type Block = { key: string; start: number; end: number; kind: "draft" | "locked" | "preview" };
-type Drag = { date: string; a: number; b: number; moved: boolean; blockKey: string | null };
+/** date は始めた列、to は今いる列。横に動かすと、その間の列すべてに同じ時刻の候補を作る */
+type Drag = { date: string; to: string; a: number; b: number; moved: boolean; blockKey: string | null };
 type Touch = { date: string; row: number; blockKey: string | null; x: number; y: number };
 
 export function SlotGrid({
@@ -42,6 +43,7 @@ export function SlotGrid({
   const scrollRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<Drag | null>(null);
   const touchRef = useRef<Touch | null>(null);
+  const columnRefs = useRef(new Map<string, HTMLDivElement>());
   const [preview, setPreview] = useState<Drag | null>(null);
   const [pendingStart, setPendingStart] = useState<{ date: string; row: number } | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -80,11 +82,22 @@ export function SlotGrid({
     return el?.dataset.blockKey ?? null;
   };
 
-  const create = (date: string, a: number, b: number) => {
-    onCreate({ date, ...slotFromRows(date, a, b) });
+  /** 横位置にある列。表の左右の外にあるときは、端の列 */
+  const dateAt = (clientX: number) => {
+    let found = dates[0];
+    for (const date of dates) {
+      const rect = columnRefs.current.get(date)?.getBoundingClientRect();
+      if (rect && clientX >= rect.left) found = date;
+    }
+    return found;
   };
 
-  // PC(マウス・ペン): ドラッグ1回で候補1件。動かさずに離したら、候補の選択・選択の解除・30分の候補のどれか
+  /** from の列から to の列まで、どの列にも同じ時刻の候補を作る */
+  const create = (from: string, to: string, a: number, b: number) => {
+    for (const date of columnsBetween(dates, from, to)) onCreate({ date, ...slotFromRows(date, a, b) });
+  };
+
+  // PC(マウス・ペン): ドラッグ1回で、1列につき候補1件。横に動かすと、その間の列すべてに作る。動かさずに離したら、候補の選択・選択の解除・30分の候補のどれか
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>, date: string) => {
     const row = rowAt(e);
     const blockKey = blockKeyAt(e);
@@ -93,7 +106,7 @@ export function SlotGrid({
       return;
     }
     e.currentTarget.setPointerCapture(e.pointerId);
-    dragRef.current = { date, a: row, b: row, moved: false, blockKey };
+    dragRef.current = { date, to: date, a: row, b: row, moved: false, blockKey };
     // 選択中や候補の上で押したときは、動かすまでプレビューを出さない(クリックなら選択の操作になるため)
     setPreview(selected || blockKey ? null : { ...dragRef.current });
   };
@@ -102,10 +115,12 @@ export function SlotGrid({
     const drag = dragRef.current;
     if (!drag) return;
     const row = rowAt(e);
-    if (row === drag.b && (drag.moved || row === drag.a)) return;
+    const to = dateAt(e.clientX);
+    if (row === drag.b && to === drag.to) return;
     drag.b = row;
-    drag.moved ||= row !== drag.a;
-    setPreview({ ...drag });
+    drag.to = to;
+    drag.moved ||= row !== drag.a || to !== drag.date;
+    if (drag.moved) setPreview({ ...drag });
   };
 
   const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -115,18 +130,19 @@ export function SlotGrid({
     setPreview(null);
     if (!drag) return;
     if (drag.moved) {
-      create(drag.date, drag.a, drag.b);
+      create(drag.date, drag.to, drag.a, drag.b);
       setSelected(null);
     } else if (drag.blockKey && isDraft(drag.blockKey)) {
       setSelected((current) => (current === drag.blockKey ? null : drag.blockKey));
     } else if (selected) {
       setSelected(null);
     } else {
-      create(drag.date, drag.a, drag.a);
+      create(drag.date, drag.date, drag.a, drag.a);
     }
   };
 
-  // スマホ: 開始マスと終了マスを順にタップする。指が動いたらスクロールとみなして何もしない
+  // スマホ: 開始マスと終了マスを順にタップする。別の列で終了をタップすると、その間の列すべてに作る。
+  // 指が動いたらスクロールとみなして何もしない
   const onTap = (e: React.PointerEvent<HTMLDivElement>) => {
     const touch = touchRef.current;
     touchRef.current = null;
@@ -137,8 +153,8 @@ export function SlotGrid({
       setSelected((current) => (current === blockKey ? null : blockKey));
     } else if (selected) {
       setSelected(null);
-    } else if (pendingStart && pendingStart.date === date) {
-      create(date, pendingStart.row, row);
+    } else if (pendingStart) {
+      create(pendingStart.date, date, pendingStart.row, row);
       setPendingStart(null);
     } else {
       setPendingStart({ date, row });
@@ -153,7 +169,12 @@ export function SlotGrid({
       ...drafts.filter((d) => d.date === date).map((d) => ({ ...d, kind: "draft" as const })),
     ];
     // 作成中の候補(ドラッグ中のプレビュー、スマホの開始の印)も、作成後と同じ幅と位置で並べる
-    const making = preview?.date === date ? preview : pendingStart?.date === date ? { a: pendingStart.row, b: pendingStart.row } : null;
+    const making =
+      preview && columnsBetween(dates, preview.date, preview.to).includes(date)
+        ? preview
+        : pendingStart?.date === date
+          ? { a: pendingStart.row, b: pendingStart.row }
+          : null;
     if (making) blocks.push({ key: "__preview", ...slotFromRows(date, making.a, making.b), kind: "preview" });
     return blocks;
   };
@@ -198,6 +219,10 @@ export function SlotGrid({
                 )}
               </div>
               <div
+                ref={(el) => {
+                  if (el) columnRefs.current.set(date, el);
+                  else columnRefs.current.delete(date);
+                }}
                 aria-label={`${formatDay(jstMidnight(date))}の候補の表`}
                 className="relative"
                 style={{ height: ROWS * ROW_HEIGHT }}

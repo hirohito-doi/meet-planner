@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { layout, ROWS, slotFromRows } from "./index";
+import { columnsBetween, layout, ROWS, slotFromRows } from "./index";
 
 const at = (iso: string) => new Date(iso).getTime();
 
@@ -62,5 +62,13 @@ describe("重なった候補を横に並べる", () => {
       "b: 1/2",
       "c: 0/2",
     ]);
+  });
+});
+
+describe("横にドラッグした範囲の列", () => {
+  test("始めた列から離した列まで、間の列も含めて表の並び順で返す", () => {
+    const dates = ["2026-12-03", "2026-12-05", "2026-12-08", "2026-12-10"];
+
+    expect(columnsBetween(dates, "2026-12-08", "2026-12-03")).toEqual(["2026-12-03", "2026-12-05", "2026-12-08"]);
   });
 });

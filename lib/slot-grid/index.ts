@@ -51,3 +51,9 @@ export function layout<T extends TimeRange>(slots: readonly T[]): Placed<T>[] {
   flush();
   return placed;
 }
+
+/** 横にドラッグした範囲の列 */
+export function columnsBetween(dates: readonly string[], from: string, to: string): string[] {
+  const [i, j] = [dates.indexOf(from), dates.indexOf(to)].sort((x, y) => x - y);
+  return dates.slice(i, j + 1);
+}

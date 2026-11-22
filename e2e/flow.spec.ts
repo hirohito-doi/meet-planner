@@ -10,8 +10,8 @@ async function scrollGridIntoView(page: Page) {
   await page.getByLabel("12/3(木)の候補の表").evaluate((el) => el.closest(".overflow-auto")?.scrollIntoView({ block: "start" }));
 }
 
-async function cellPoint(page: Page, row: number) {
-  const box = await page.getByLabel("12/3(木)の候補の表").boundingBox();
+async function cellPoint(page: Page, row: number, day = "12/3(木)") {
+  const box = await page.getByLabel(`${day}の候補の表`).boundingBox();
   if (!box) throw new Error("候補の表が見つかりません");
   return { x: box.x + 20, y: box.y + row * ROW_HEIGHT + ROW_HEIGHT / 2 };
 }
@@ -76,4 +76,26 @@ test("日程調整を作成し、回答して、確定できる", async ({ page 
 
   await page.goto(responseLink);
   await expect(page.getByText("日程が確定しました: 12/3(木) 10:00-12:00")).toBeVisible();
+});
+
+test("横にドラッグすると、間の列も含めてどの列にも同じ時刻の候補ができる", async ({ page }, testInfo) => {
+  await page.goto("/");
+  await page.locator('input[type="date"]').fill("2026-12-01");
+  for (const date of ["2026-12-03", "2026-12-04", "2026-12-05"]) await page.getByRole("button", { name: date }).click();
+
+  await scrollGridIntoView(page);
+  const from = await cellPoint(page, 32, "12/3(木)");
+  const to = await cellPoint(page, 35, "12/5(土)");
+  if (testInfo.project.name === "mobile") {
+    // スマホ: 開始と終了を別の列でタップする
+    await page.touchscreen.tap(from.x, from.y);
+    await page.touchscreen.tap(to.x, to.y);
+  } else {
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move(to.x, to.y, { steps: 10 });
+    await page.mouse.up();
+  }
+  await expect(page.getByText("10:00-12:00")).toHaveCount(3);
+  await expect(page.getByText("新しい候補: 3件")).toBeVisible();
 });
