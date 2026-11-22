@@ -16,13 +16,10 @@ function useToday() {
 }
 
 export function MonthCalendar({
-  focus,
   added,
   fixed,
   onToggle,
 }: {
-  /** 日付の入力欄の値(YYYY-MM-DD)。変わったら、その日付の月を表示する */
-  focus: string;
   /** 表の列になっている日付 */
   added: string[];
   /** 外せない日付(保存済みの候補がある日付) */
@@ -30,12 +27,10 @@ export function MonthCalendar({
   onToggle: (date: string) => void;
 }) {
   const today = useToday();
-  // ‹ › で動かした月。入力欄の日付が変わったら、動かした月は使わない
-  const [shown, setShown] = useState<{ focus: string; year: number; month: number } | null>(null);
-  const base = focus || today;
-  if (!base) return <div className="h-64" />;
-  const { year, month } =
-    shown && shown.focus === focus ? shown : { year: Number(base.slice(0, 4)), month: Number(base.slice(5, 7)) - 1 };
+  // ‹ › で動かした月。動かすまでは今日の月
+  const [shown, setShown] = useState<{ year: number; month: number } | null>(null);
+  if (!today) return <div className="h-64" />;
+  const { year, month } = shown ?? { year: Number(today.slice(0, 4)), month: Number(today.slice(5, 7)) - 1 };
 
   const firstWeekday = new Date(Date.UTC(year, month, 1)).getUTCDay();
   const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
@@ -43,7 +38,7 @@ export function MonthCalendar({
   const dateOf = (day: number) => `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   const move = (delta: number) => {
     const d = new Date(Date.UTC(year, month + delta, 1));
-    setShown({ focus, year: d.getUTCFullYear(), month: d.getUTCMonth() });
+    setShown({ year: d.getUTCFullYear(), month: d.getUTCMonth() });
   };
 
   return (

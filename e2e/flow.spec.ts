@@ -10,6 +10,15 @@ async function scrollGridIntoView(page: Page) {
   await page.getByLabel("12/3(木)の候補の表").evaluate((el) => el.closest(".overflow-auto")?.scrollIntoView({ block: "start" }));
 }
 
+/** 今日を 2026-11-22 に固定して作成画面を開き、カレンダーを 2026年12月 に進める */
+async function openNextMonth(page: Page) {
+  await page.clock.setFixedTime(new Date("2026-11-22T12:00:00+09:00"));
+  await page.goto("/");
+  await expect(page.getByText("2026年11月")).toBeVisible();
+  await page.getByRole("button", { name: "次の月" }).click();
+  await expect(page.getByText("2026年12月")).toBeVisible();
+}
+
 async function cellPoint(page: Page, row: number, day = "12/3(木)") {
   const box = await page.getByLabel(`${day}の候補の表`).boundingBox();
   if (!box) throw new Error("候補の表が見つかりません");
@@ -19,12 +28,9 @@ async function cellPoint(page: Page, row: number, day = "12/3(木)") {
 test("日程調整を作成し、回答して、確定できる", async ({ page }, testInfo) => {
   const mobile = testInfo.project.name === "mobile";
 
-  // 作成
-  await page.goto("/");
+  // 作成。カレンダーは今日の月から始まり、日付を押すと表の列になる
+  await openNextMonth(page);
   await page.getByLabel("タイトル(必須)").fill("忘年会");
-  // 入力欄に日付を入れるとカレンダーがその月になり、カレンダーで日付を押すと表の列になる
-  await page.locator('input[type="date"]').fill("2026-12-01");
-  await expect(page.getByText("2026年12月")).toBeVisible();
   await page.getByRole("button", { name: "2026-12-03" }).click();
   await expect(page.getByRole("button", { name: "2026-12-03" })).toHaveAttribute("aria-pressed", "true");
 
@@ -79,8 +85,7 @@ test("日程調整を作成し、回答して、確定できる", async ({ page 
 });
 
 test("横にドラッグすると、間の列も含めてどの列にも同じ時刻の候補ができる", async ({ page }, testInfo) => {
-  await page.goto("/");
-  await page.locator('input[type="date"]').fill("2026-12-01");
+  await openNextMonth(page);
   for (const date of ["2026-12-03", "2026-12-04", "2026-12-05"]) await page.getByRole("button", { name: date }).click();
 
   await scrollGridIntoView(page);

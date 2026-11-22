@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { MonthCalendar } from "./month-calendar";
 import { SlotGrid } from "./slot-grid";
 import type { useDraftSlots } from "./use-draft-slots";
@@ -17,7 +16,6 @@ export function SlotSection({
   removeSlot,
 }: ReturnType<typeof useDraftSlots> &
   Pick<React.ComponentProps<typeof SlotGrid>, "locked" | "fixedDates">) {
-  const [date, setDate] = useState("");
   /** 列を外す。その列で作った候補があるときは、確かめてから外す */
   const removeDateWithConfirm = (target: string) => {
     const count = drafts.filter((d) => d.date === target).length;
@@ -27,30 +25,10 @@ export function SlotSection({
     <section className="space-y-2">
       <h2 className="text-sm font-medium">候補</h2>
       <MonthCalendar
-        focus={date}
         added={dates}
         fixed={fixedDates ?? []}
         onToggle={(d) => (dates.includes(d) ? removeDateWithConfirm(d) : addDate(d))}
       />
-      <div className="flex gap-2">
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="rounded border border-zinc-300 px-3 py-2"
-        />
-        <button
-          type="button"
-          disabled={!date}
-          onClick={() => {
-            addDate(date);
-            setDate("");
-          }}
-          className="rounded border border-zinc-300 px-3 py-2 disabled:opacity-40"
-        >
-          日付を追加
-        </button>
-      </div>
       <p className="text-xs text-zinc-500">
         {dates.length === 0
           ? "カレンダーで日付を選ぶと、表に列ができます。"
