@@ -99,7 +99,7 @@ export function AdminPanel({ poll, token, created }: { poll: PollView; token: st
         </ul>
       </section>
 
-      {!finalized && <AddSlots poll={poll} token={token} />}
+      <SlotEditor poll={poll} token={token} />
 
       <section className="space-y-3">
         <h2 className="text-lg font-medium">回答者({poll.responses.length}人)</h2>
@@ -182,7 +182,9 @@ function CopyField({ label, value }: { label: string; value: string }) {
   );
 }
 
-function AddSlots({ poll, token }: { poll: PollView; token: string }) {
+/** 候補の表。新しい候補を追加し、保存済みの候補を削除する。確定中は削除だけできる */
+function SlotEditor({ poll, token }: { poll: PollView; token: string }) {
+  const finalized = poll.finalizedSlotId !== null;
   // 保存済みの候補は、開始時刻の日付の列に灰色で描く(docs/spec.md「候補の作成」)
   const savedDates = [...new Set(poll.slots.map((s) => jstDate(s.start)))];
   const draftSlots = useDraftSlots();
@@ -191,25 +193,43 @@ function AddSlots({ poll, token }: { poll: PollView; token: string }) {
   const [pending, startTransition] = useTransition();
   return (
     <section className="space-y-3">
-      <h2 className="text-lg font-medium">候補の追加</h2>
-      <SlotSection {...draftSlots} dates={dates} locked={poll.slots} fixedDates={savedDates} />
-      {message && <p className="text-sm text-red-600">{message}</p>}
-      <Button
-        disabled={pending || draftSlots.drafts.length === 0}
-        onClick={() =>
+      <h2 className="text-lg font-medium">{finalized ? "候補の削除" : "候補の追加と削除"}</h2>
+      <SlotSection
+        {...draftSlots}
+        dates={dates}
+        locked={poll.slots}
+        fixedDates={savedDates}
+        canCreate={!finalized}
+        onDeleteLocked={(id) => {
+          const slot = poll.slots.find((s) => s.id === id);
+          if (!slot) return;
+          const warning = id === poll.finalizedSlotId ? "確定も取り消されます。" : "";
+          if (!confirm(`${formatSlot(slot)} を削除します。この候補への回答も消えます。${warning}`)) return;
           startTransition(async () => {
-            const result = await addSlotsAction(
-              poll.id,
-              token,
-              draftSlots.drafts.map((d) => ({ start: d.start, end: d.end })),
-            );
-            if (result.ok) draftSlots.clearSlots();
+            const result = await removeSlotAction(poll.id, token, id);
             setMessage(result.ok ? null : result.message);
-          })
-        }
-      >
-        候補を追加する
-      </Button>
+          });
+        }}
+      />
+      {message && <p className="text-sm text-red-600">{message}</p>}
+      {!finalized && (
+        <Button
+          disabled={pending || draftSlots.drafts.length === 0}
+          onClick={() =>
+            startTransition(async () => {
+              const result = await addSlotsAction(
+                poll.id,
+                token,
+                draftSlots.drafts.map((d) => ({ start: d.start, end: d.end })),
+              );
+              if (result.ok) draftSlots.clearSlots();
+              setMessage(result.ok ? null : result.message);
+            })
+          }
+        >
+          候補を追加する
+        </Button>
+      )}
     </section>
   );
 }

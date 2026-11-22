@@ -14,8 +14,10 @@ export function SlotSection({
   removeDate,
   addSlot,
   removeSlot,
+  onDeleteLocked,
+  canCreate = true,
 }: ReturnType<typeof useDraftSlots> &
-  Pick<React.ComponentProps<typeof SlotGrid>, "locked" | "fixedDates">) {
+  Pick<React.ComponentProps<typeof SlotGrid>, "locked" | "fixedDates" | "onDeleteLocked" | "canCreate">) {
   /** 列を外す。その列で作った候補があるときは、確かめてから外す */
   const removeDateWithConfirm = (target: string) => {
     const count = drafts.filter((d) => d.date === target).length;
@@ -24,15 +26,19 @@ export function SlotSection({
   return (
     <section className="space-y-2">
       <h2 className="text-sm font-medium">候補</h2>
-      <MonthCalendar
-        added={dates}
-        fixed={fixedDates ?? []}
-        onToggle={(d) => (dates.includes(d) ? removeDateWithConfirm(d) : addDate(d))}
-      />
+      {canCreate && (
+        <MonthCalendar
+          added={dates}
+          fixed={fixedDates ?? []}
+          onToggle={(d) => (dates.includes(d) ? removeDateWithConfirm(d) : addDate(d))}
+        />
+      )}
       <p className="text-xs text-zinc-500">
-        {dates.length === 0
-          ? "カレンダーで日付を選ぶと、表に列ができます。"
-          : "PC はドラッグ、スマホは開始と終了のマスを順にタップして候補を作ります。候補を選ぶと削除できます。"}
+        {!canCreate
+          ? "確定中は候補を追加できません。候補を選ぶと削除できます。"
+          : dates.length === 0
+            ? "カレンダーで日付を選ぶと、表に列ができます。"
+            : "PC はドラッグ、スマホは開始と終了のマスを順にタップして候補を作ります。候補を選ぶと削除できます。"}
       </p>
       <SlotGrid
         dates={dates}
@@ -42,8 +48,10 @@ export function SlotSection({
         onDelete={removeSlot}
         onRemoveDate={removeDateWithConfirm}
         fixedDates={fixedDates}
+        onDeleteLocked={onDeleteLocked}
+        canCreate={canCreate}
       />
-      <p className="text-xs text-zinc-500">新しい候補: {drafts.length}件</p>
+      {canCreate && <p className="text-xs text-zinc-500">新しい候補: {drafts.length}件</p>}
     </section>
   );
 }

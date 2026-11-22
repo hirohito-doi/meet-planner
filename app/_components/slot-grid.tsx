@@ -7,7 +7,7 @@ import { columnsBetween, layout, ROWS, slotFromRows } from "@/lib/slot-grid";
 
 /** 画面の中だけにある、まだ保存していない候補。作った列(date)を覚えておく */
 export type DraftSlot = { key: string; date: string; start: number; end: number };
-/** 保存済みの候補。開始時刻の日付の列に灰色で描き、表の上では選べない */
+/** 保存済みの候補。開始時刻の日付の列に灰色で描く。onDeleteLocked があれば、選んで削除できる */
 export type LockedSlot = { id: string; start: number; end: number };
 
 const ROW_HEIGHT = 22;
@@ -29,6 +29,8 @@ export function SlotGrid({
   onDelete,
   onRemoveDate,
   fixedDates = [],
+  onDeleteLocked,
+  canCreate = true,
 }: {
   dates: string[];
   drafts: DraftSlot[];
@@ -38,6 +40,10 @@ export function SlotGrid({
   onRemoveDate?: (date: string) => void;
   /** 保存済みの候補がある日付。この列は外せない */
   fixedDates?: string[];
+  /** 保存済みの候補を削除する */
+  onDeleteLocked?: (id: string) => void;
+  /** false なら候補を作れない(確定中)。選択と削除だけできる */
+  canCreate?: boolean;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -108,7 +114,7 @@ export function SlotGrid({
     e.currentTarget.setPointerCapture(e.pointerId);
     dragRef.current = { date, to: date, a: row, b: row, moved: false, blockKey };
     // 選択中や候補の上で押したときは、動かすまでプレビューを出さない(クリックなら選択の操作になるため)
-    setPreview(selected || blockKey ? null : { ...dragRef.current });
+    setPreview(selected || blockKey || !canCreate ? null : { ...dragRef.current });
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -120,7 +126,7 @@ export function SlotGrid({
     drag.b = row;
     drag.to = to;
     drag.moved ||= row !== drag.a || to !== drag.date;
-    if (drag.moved) setPreview({ ...drag });
+    if (drag.moved && canCreate) setPreview({ ...drag });
   };
 
   const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -130,13 +136,13 @@ export function SlotGrid({
     setPreview(null);
     if (!drag) return;
     if (drag.moved) {
-      create(drag.date, drag.to, drag.a, drag.b);
+      if (canCreate) create(drag.date, drag.to, drag.a, drag.b);
       setSelected(null);
-    } else if (drag.blockKey && isDraft(drag.blockKey)) {
+    } else if (drag.blockKey && isSelectable(drag.blockKey)) {
       setSelected((current) => (current === drag.blockKey ? null : drag.blockKey));
     } else if (selected) {
       setSelected(null);
-    } else {
+    } else if (canCreate) {
       create(drag.date, drag.date, drag.a, drag.a);
     }
   };
@@ -148,11 +154,13 @@ export function SlotGrid({
     touchRef.current = null;
     if (!touch || Math.hypot(e.clientX - touch.x, e.clientY - touch.y) > TAP_SLOP) return;
     const { date, row, blockKey } = touch;
-    if (blockKey && isDraft(blockKey)) {
+    if (blockKey && isSelectable(blockKey)) {
       setPendingStart(null);
       setSelected((current) => (current === blockKey ? null : blockKey));
     } else if (selected) {
       setSelected(null);
+    } else if (!canCreate) {
+      return;
     } else if (pendingStart) {
       create(pendingStart.date, date, pendingStart.row, row);
       setPendingStart(null);
@@ -162,6 +170,7 @@ export function SlotGrid({
   };
 
   const isDraft = (key: string) => drafts.some((d) => d.key === key);
+  const isSelectable = (key: string) => isDraft(key) || (!!onDeleteLocked && locked.some((s) => s.id === key));
 
   const blocksOf = (date: string): Block[] => {
     const blocks: Block[] = [
@@ -279,7 +288,8 @@ export function SlotGrid({
             type="button"
             className="rounded bg-red-600 px-4 py-2 text-white"
             onClick={() => {
-              onDelete(selected);
+              if (isDraft(selected)) onDelete(selected);
+              else onDeleteLocked?.(selected);
               setSelected(null);
             }}
           >
@@ -300,7 +310,7 @@ function rowLabel(row: number) {
 }
 
 function blockStyle(kind: Block["kind"], selected: boolean) {
-  if (kind === "locked") return "border-zinc-400 bg-zinc-200 text-zinc-600";
+  if (kind === "locked") return selected ? "border-zinc-800 bg-zinc-600 text-white ring-2 ring-zinc-300" : "border-zinc-400 bg-zinc-200 text-zinc-600";
   if (kind === "preview") return "border-dashed border-blue-500 bg-blue-100/70 text-blue-900";
   return selected ? "border-blue-900 bg-blue-700 text-white ring-2 ring-blue-300" : "border-blue-600 bg-blue-500 text-white";
 }

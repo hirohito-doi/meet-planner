@@ -80,6 +80,16 @@ test("日程調整を作成し、回答して、確定できる", async ({ page 
   await page.getByRole("button", { name: "この候補で確定する" }).first().click();
   await expect(page.getByRole("button", { name: "確定を取り消す" })).toBeVisible();
 
+  // 確定中でも、表の上で保存済みの候補を選んで削除できる
+  await scrollGridIntoView(page);
+  const saved = await cellPoint(page, 38);
+  if (mobile) await page.touchscreen.tap(saved.x, saved.y);
+  else await page.mouse.click(saved.x, saved.y);
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "この候補を削除" }).click();
+  await expect(page.getByText("12/3(木) 13:00-13:30")).toBeHidden();
+  await expect(page.getByRole("button", { name: "確定を取り消す" })).toBeVisible();
+
   await page.goto(responseLink);
   await expect(page.getByText("日程が確定しました: 12/3(木) 10:00-12:00")).toBeVisible();
 });
