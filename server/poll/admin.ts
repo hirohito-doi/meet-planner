@@ -35,12 +35,11 @@ export async function openAdmin(db: Db, pollId: string, adminToken: string) {
       const fresh = merged.filter((s) => s.id === undefined);
       if (fresh.length) await insertSlots(db, pollId, fresh.map((s) => ({ id: newId(), start: s.start, end: s.end })));
     },
-    /** 候補を削除する。その候補への可否も消える */
+    /** 候補を削除する。その候補への可否も消える。確定中でも削除でき、確定した候補なら確定も取り消す */
     async removeSlot(slotId: string) {
       if (!(await hasSlot(db, pollId, slotId))) {
         throw new PollError("INVALID_INPUT", "この日程調整にない候補です");
       }
-      await assertNotFinalized(db, pollId);
       await deleteSlot(db, pollId, slotId);
     },
     /** 回答を1人分まとめて削除する。確定中でも削除できる */

@@ -153,12 +153,28 @@ describe("確定中は読み取り専用", () => {
     ).rejects.toMatchObject({ code: "FINALIZED" });
   });
 
-  test("確定中は、確定していない候補も削除できない", async () => {
+  test("確定中でも、確定していない候補を削除でき、確定はそのまま残る", async () => {
     const { db, pollId, adminToken, dec3, dec4 } = await setup();
     const admin = await openAdmin(db, pollId, adminToken);
     await admin!.finalize(dec3);
 
-    await expect(admin!.removeSlot(dec4)).rejects.toMatchObject({ code: "FINALIZED" });
+    await admin!.removeSlot(dec4);
+
+    const poll = await readPoll(db, pollId);
+    expect(poll!.slots.map((s) => s.id)).toEqual([dec3]);
+    expect(poll!.finalizedSlotId).toBe(dec3);
+  });
+
+  test("確定した候補を削除すると、確定が取り消される", async () => {
+    const { db, pollId, adminToken, dec3, dec4 } = await setup();
+    const admin = await openAdmin(db, pollId, adminToken);
+    await admin!.finalize(dec3);
+
+    await admin!.removeSlot(dec3);
+
+    const poll = await readPoll(db, pollId);
+    expect(poll!.slots.map((s) => s.id)).toEqual([dec4]);
+    expect(poll!.finalizedSlotId).toBeNull();
   });
 });
 

@@ -121,11 +121,15 @@ export async function insertSlots(db: Db, pollId: string, newSlots: StoredSlot[]
   await db.insert(slots).values(newSlots.map((s) => ({ id: s.id, pollId, startAt: s.start, endAt: s.end })));
 }
 
-/** 候補と、その候補への可否を削除する(外部キーがないので可否も明示的に消す) */
+/** 候補と、その候補への可否を削除する(外部キーがないので可否も明示的に消す)。確定した候補なら確定も取り消す */
 export async function deleteSlot(db: Db, pollId: string, slotId: string) {
   await db.batch([
     db.delete(availabilities).where(eq(availabilities.slotId, slotId)),
     db.delete(slots).where(and(eq(slots.pollId, pollId), eq(slots.id, slotId))),
+    db
+      .update(polls)
+      .set({ finalizedSlotId: null })
+      .where(and(eq(polls.id, pollId), eq(polls.finalizedSlotId, slotId))),
   ]);
 }
 

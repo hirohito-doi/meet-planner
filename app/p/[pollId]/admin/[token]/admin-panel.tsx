@@ -53,7 +53,7 @@ export function AdminPanel({ poll, token, created }: { poll: PollView; token: st
         <h2 className="text-lg font-medium">候補(スコアの高い順)</h2>
         {finalized && (
           <p className="text-sm text-zinc-600">
-            確定中は、回答・候補・タイトルと説明を変更できません。変更するには、確定を取り消してください。
+            確定中は、回答・候補の追加・タイトルと説明を変更できません。変更するには、確定を取り消してください。候補の削除はできます。
           </p>
         )}
         {poll.ranking.length === 0 && <p className="text-sm text-zinc-500">候補がありません。</p>}
@@ -82,9 +82,10 @@ export function AdminPanel({ poll, token, created }: { poll: PollView; token: st
                   )}
                   <Button
                     danger
-                    disabled={pending || finalized}
+                    disabled={pending}
                     onClick={() => {
-                      if (confirm(`${formatSlot(slot)} を削除します。この候補への回答も消えます。`)) {
+                      const warning = isFinalized ? "確定も取り消されます。" : "";
+                      if (confirm(`${formatSlot(slot)} を削除します。この候補への回答も消えます。${warning}`)) {
                         run(() => removeSlotAction(poll.id, token, slotId));
                       }
                     }}
