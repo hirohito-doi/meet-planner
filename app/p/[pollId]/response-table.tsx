@@ -10,6 +10,33 @@ type Me = { responseId: string; editToken: string };
 type Cell = Availability | null;
 
 const SYMBOL: Record<Availability, string> = { yes: "○", maybe: "△", no: "×" };
+/** 可否ごとの色。記号の色とマスの背景色 */
+const TONE: Record<Availability, string> = {
+  yes: "bg-emerald-50 text-emerald-600",
+  maybe: "bg-amber-50 text-amber-500",
+  no: "bg-rose-50 text-rose-500",
+};
+
+/** 可否の印。太さをそろえるため SVG で描き、読み上げとテストのために記号の文字も持つ */
+function Mark({ value }: { value: Availability }) {
+  return (
+    <>
+      <svg viewBox="0 0 24 24" aria-hidden className="size-7" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+        {value === "yes" && <circle cx="12" cy="12" r="8.5" />}
+        {value === "maybe" && <path d="M12 3.5 21 19.5H3Z" />}
+        {value === "no" && <path d="M5 5 19 19M19 5 5 19" />}
+      </svg>
+      <span className="sr-only">{SYMBOL[value]}</span>
+    </>
+  );
+}
+
+/** 候補を日付と時刻に分ける(例: 「12/3(木)」と「10:00-12:00」) */
+function splitSlot(slot: { start: number; end: number }) {
+  const text = formatSlot(slot);
+  const space = text.indexOf(" ");
+  return { day: text.slice(0, space), time: text.slice(space + 1) };
+}
 /** タップするたびに 空欄 → ○ → △ → × → 空欄 と切り替わる */
 const NEXT: Record<"none" | Availability, Cell> = { none: "yes", yes: "maybe", maybe: "no", no: null };
 /** 同じセルを素早く何度もタップしたときは、最後の値だけを保存する */
@@ -80,63 +107,117 @@ export function ResponseTable({ poll }: { poll: PollView }) {
 
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold">{poll.title}</h1>
-        {poll.description && <p className="whitespace-pre-wrap text-sm text-zinc-700">{poll.description}</p>}
+      <header className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">{poll.title}</h1>
+        {poll.description && <p className="whitespace-pre-wrap text-zinc-700">{poll.description}</p>}
       </header>
 
       {finalizedSlot && (
-        <p className="rounded border border-green-600 bg-green-50 px-4 py-3 font-medium text-green-900">
-          日程が確定しました: {formatSlot(finalizedSlot)}
-        </p>
+        <div className="rounded-lg border-2 border-emerald-600 bg-emerald-50 px-5 py-4 text-emerald-900">
+          <p className="text-sm font-medium">日程が確定しました</p>
+          <p className="text-xl font-bold">{formatSlot(finalizedSlot)}</p>
+        </div>
       )}
-      {error && <p className="rounded bg-red-50 px-4 py-2 text-sm text-red-700">{error}</p>}
+      {error && <p className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-red-700">{error}</p>}
+
+      {myResponse && !finalized && (
+        <div className="space-y-1 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-950">
+          <p>
+            <span className="font-bold">あなたの列</span>(青い列)のマスをタップすると、
+            <span className="font-bold text-emerald-600">○</span>
+            {" → "}
+            <span className="font-bold text-amber-500">△</span>
+            {" → "}
+            <span className="font-bold text-rose-500">×</span>
+            {" → 空欄 の順に切り替わります。自動で保存されます。"}
+          </p>
+          <p className="text-blue-800">名前を押すと、名前を変更できます。</p>
+        </div>
+      )}
 
       {poll.slots.length === 0 ? (
-        <p className="text-sm text-zinc-500">候補がまだありません。</p>
+        <p className="rounded-lg border border-dashed border-zinc-300 px-4 py-6 text-center text-zinc-500">
+          候補がまだありません。
+        </p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="border-collapse text-sm">
+        <div className="overflow-x-auto rounded-lg border border-zinc-300 shadow-sm">
+          <table className="w-full border-collapse">
             <thead>
-              <tr>
-                <th className="sticky left-0 bg-white px-2 py-1 text-left font-medium">候補</th>
-                {poll.responses.map((r) => (
-                  <th key={r.id} className="min-w-14 px-2 py-1 font-medium">
-                    {r.id === myResponse?.id && !finalized ? (
-                      <button type="button" onClick={() => setEditingName(true)} className="rounded bg-blue-100 px-2 underline">
-                        {r.name}
-                      </button>
-                    ) : (
-                      r.name
-                    )}
-                  </th>
-                ))}
+              <tr className="bg-zinc-100">
+                <th className="sticky left-0 z-10 border-b-2 border-r border-zinc-300 bg-zinc-100 px-3 py-2 text-left text-sm font-bold text-zinc-700">
+                  候補
+                </th>
+                {poll.responses.map((r) => {
+                  const mine = r.id === myResponse?.id;
+                  return (
+                    <th
+                      key={r.id}
+                      className={`min-w-16 border-b-2 border-l border-zinc-300 px-2 py-2 text-sm font-bold ${
+                        mine ? "bg-blue-600 text-white" : "text-zinc-800"
+                      }`}
+                    >
+                      {mine && !finalized ? (
+                        <button
+                          type="button"
+                          onClick={() => setEditingName(true)}
+                          className="rounded px-1 underline decoration-white/60 underline-offset-4 hover:bg-blue-500"
+                        >
+                          {r.name}
+                        </button>
+                      ) : (
+                        r.name
+                      )}
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
               {poll.slots.map((slot) => {
+                const isFinalized = slot.id === poll.finalizedSlotId;
+                const { day, time } = splitSlot(slot);
                 return (
-                  <tr key={slot.id}>
-                    <td className="sticky left-0 whitespace-nowrap border-t border-zinc-200 bg-white px-2 py-2">
-                      {slot.id === poll.finalizedSlotId && "✅ "}
-                      {formatSlot(slot)}
+                  <tr key={slot.id} className={isFinalized ? "bg-emerald-100" : ""}>
+                    <td
+                      className={`sticky left-0 z-10 whitespace-nowrap border-r border-t border-zinc-300 px-3 py-2 ${
+                        isFinalized ? "bg-emerald-100" : "bg-white"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div>
+                          <div className="text-sm font-bold text-zinc-900">{day}</div>
+                          <div className="text-sm text-zinc-700">{time}</div>
+                        </div>
+                        {isFinalized && (
+                          <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-bold text-white">確定</span>
+                        )}
+                      </div>
                     </td>
                     {poll.responses.map((r) => {
                       const mine = r.id === myResponse?.id;
                       const value = mine && slot.id in overrides ? overrides[slot.id] : (r.availabilities[slot.id] ?? null);
                       return (
-                        <td key={r.id} className="border-t border-zinc-200 p-0 text-center text-lg">
+                        <td
+                          key={r.id}
+                          className={`border-t border-zinc-300 p-0 text-center text-2xl font-bold ${
+                            mine ? "border-x-2 border-x-blue-600" : "border-l"
+                          } ${value ? TONE[value] : ""}`}
+                        >
                           {mine && !finalized ? (
                             <button
                               type="button"
                               aria-label={`${formatSlot(slot)}の可否`}
                               onClick={() => tap(slot.id)}
-                              className="h-11 w-full min-w-14 bg-blue-50 hover:bg-blue-100"
+                              className="flex h-14 w-full min-w-16 items-center justify-center p-1.5 hover:brightness-95 active:brightness-90"
                             >
-                              {value ? SYMBOL[value] : ""}
+                              {value ? (
+                                <Mark value={value} />
+                              ) : (
+                                <span className="h-full w-full rounded border-2 border-dashed border-blue-300" />
+                              )}
                             </button>
                           ) : (
-                            <span className="inline-block px-2 py-2">{value ? SYMBOL[value] : ""}</span>
+                            <span className="flex h-14 items-center justify-center px-2">{value && <Mark value={value} />}</span>
                           )}
                         </td>
                       );
@@ -209,7 +290,7 @@ function NameDialog({
           setPending(false);
         }}
       >
-        <h2 className="font-medium">{title}</h2>
+        <h2 className="text-lg font-bold">{title}</h2>
         <input
           autoFocus
           required
@@ -217,16 +298,16 @@ function NameDialog({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="名前"
-          className="w-full rounded border border-zinc-300 px-3 py-2"
+          className="w-full rounded-lg border-2 border-zinc-300 px-3 py-3 text-lg focus:border-blue-600 focus:outline-none"
         />
         {message && <p className="text-sm text-red-600">{message}</p>}
         <div className="flex justify-end gap-2">
           {onCancel && (
-            <button type="button" onClick={onCancel} className="rounded border border-zinc-300 px-4 py-2">
+            <button type="button" onClick={onCancel} className="rounded-lg border border-zinc-300 px-4 py-2.5">
               キャンセル
             </button>
           )}
-          <button type="submit" disabled={pending || !name.trim()} className="rounded bg-zinc-900 px-4 py-2 text-white disabled:opacity-40">
+          <button type="submit" disabled={pending || !name.trim()} className="rounded-lg bg-blue-600 px-5 py-2.5 font-bold text-white hover:bg-blue-700 disabled:opacity-40">
             {submitLabel}
           </button>
         </div>

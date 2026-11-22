@@ -94,7 +94,8 @@ test("日程調整を作成し、回答して、確定できる", async ({ page 
   await expect(page.getByRole("button", { name: "確定を取り消す" })).toBeVisible();
 
   await page.goto(responseLink);
-  await expect(page.getByText("日程が確定しました: 12/3(木) 10:00-12:00")).toBeVisible();
+  await expect(page.getByText("日程が確定しました")).toBeVisible();
+  await expect(page.getByText("12/3(木) 10:00-12:00", { exact: true })).toBeVisible();
 });
 
 test("横にドラッグすると、間の列も含めてどの列にも同じ時刻の候補ができる", async ({ page }, testInfo) => {
