@@ -36,29 +36,30 @@ export function CreatePollForm() {
   return (
     <form onSubmit={submit}>
       <TwoColumns
+        top={
+          <div className="space-y-2">
+            <input
+              required
+              maxLength={100}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="タイトル(必須)"
+              aria-label="タイトル(必須)"
+              className="w-full border-0 border-b-2 border-slate-200 bg-transparent px-0 py-2 text-3xl font-bold text-slate-900 placeholder:text-slate-300 focus:border-slate-900 focus:outline-none"
+            />
+            <textarea
+              maxLength={1000}
+              rows={2}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="説明(任意)"
+              aria-label="説明"
+              className="w-full resize-none border-0 bg-transparent px-0 text-slate-700 placeholder:text-slate-400 focus:outline-none"
+            />
+          </div>
+        }
         side={
           <>
-            <div className="space-y-2">
-              <input
-                required
-                maxLength={100}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="タイトル(必須)"
-                aria-label="タイトル(必須)"
-                className="w-full border-0 border-b-2 border-slate-200 bg-transparent px-0 py-2 text-2xl font-bold text-slate-900 placeholder:text-slate-300 focus:border-slate-900 focus:outline-none"
-              />
-              <textarea
-                maxLength={1000}
-                rows={2}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="説明(任意)"
-                aria-label="説明"
-                className="w-full resize-none border-0 bg-transparent px-0 text-slate-700 placeholder:text-slate-400 focus:outline-none"
-              />
-            </div>
-
             <Section title="日付">
               <MonthCalendar added={slots.dates} fixed={[]} onToggle={slots.toggleDate} />
             </Section>

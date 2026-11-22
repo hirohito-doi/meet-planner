@@ -16,23 +16,26 @@ export function AppHeader({ label }: { label?: string }) {
 }
 
 /**
- * 左に操作と情報、右に広い作業場所を置く2列。
- * スマホでは1列にして side → children → sideBottom の順に並べる(作業場所の上で一覧が伸びて、表がずれないように)
+ * 上に横幅いっぱいのタイトル、その下に、左に操作と情報、右に広い作業場所を置く2列。
+ * スマホでは1列にして top → side → children → sideBottom の順に並べる(作業場所の上で一覧が伸びて、表がずれないように)
  */
 export function TwoColumns({
+  top,
   side,
   sideBottom,
   children,
 }: {
-  side: React.ReactNode;
+  top: React.ReactNode;
+  side?: React.ReactNode;
   sideBottom?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <main className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[340px_minmax(0,1fr)] lg:grid-rows-[auto_1fr]">
-      <div className="space-y-8 lg:col-start-1 lg:row-start-1">{side}</div>
-      <div className="min-w-0 space-y-8 lg:col-start-2 lg:row-span-2 lg:row-start-1">{children}</div>
-      {sideBottom && <div className="space-y-8 lg:col-start-1 lg:row-start-2">{sideBottom}</div>}
+    <main className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[340px_minmax(0,1fr)] lg:grid-rows-[auto_auto_1fr]">
+      <div className="lg:col-span-2 lg:row-start-1">{top}</div>
+      {side && <div className="space-y-8 lg:col-start-1 lg:row-start-2">{side}</div>}
+      <div className="min-w-0 space-y-8 lg:col-start-2 lg:row-span-2 lg:row-start-2">{children}</div>
+      {sideBottom && <div className="space-y-8 lg:col-start-1 lg:row-start-3">{sideBottom}</div>}
     </main>
   );
 }

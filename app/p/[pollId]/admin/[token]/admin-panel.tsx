@@ -37,17 +37,20 @@ export function AdminPanel({ poll, token, created }: { poll: PollView; token: st
 
   return (
     <TwoColumns
+      top={
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+          <div className="min-w-0 space-y-2">
+            <p className="text-xs font-bold tracking-wider text-slate-500">管理画面</p>
+            <h1 className="text-3xl font-bold text-slate-900">{poll.title}</h1>
+            {poll.description && <p className="whitespace-pre-wrap text-slate-600">{poll.description}</p>}
+          </div>
+          <Link href={`/p/${poll.id}`} className="text-sm font-medium text-slate-700 underline underline-offset-4 hover:text-slate-950">
+            回答画面を開く
+          </Link>
+        </div>
+      }
       side={
         <>
-          <div className="space-y-2">
-            <p className="text-xs font-bold tracking-wider text-slate-500">管理画面</p>
-            <h1 className="text-2xl font-bold text-slate-900">{poll.title}</h1>
-            {poll.description && <p className="whitespace-pre-wrap text-sm text-slate-600">{poll.description}</p>}
-            <Link href={`/p/${poll.id}`} className="inline-block text-sm font-medium text-slate-700 underline underline-offset-4 hover:text-slate-950">
-              回答画面を開く
-            </Link>
-          </div>
-
           <Links pollId={poll.id} token={token} created={created} />
         </>
       }
