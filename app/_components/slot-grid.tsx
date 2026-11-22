@@ -233,7 +233,7 @@ export function SlotGrid({
                   else columnRefs.current.delete(date);
                 }}
                 aria-label={`${formatDay(jstMidnight(date))}の候補の表`}
-                className="relative"
+                className={`relative ${canCreate ? "cursor-pointer" : ""}`}
                 style={{ height: ROWS * ROW_HEIGHT }}
                 onPointerDown={(e) => onPointerDown(e, date)}
                 onPointerMove={onPointerMove}
@@ -267,7 +267,9 @@ export function SlotGrid({
                           left: `calc(${lane} * ${width})`,
                           width,
                         }}
-                        className={`absolute overflow-hidden rounded border px-1 text-[10px] leading-tight ${blockStyle(
+                        className={`absolute overflow-hidden rounded border px-1 text-[10px] leading-tight ${
+                          slot.kind !== "preview" && isSelectable(slot.key) ? "cursor-pointer" : "cursor-default"
+                        } ${blockStyle(
                           slot.kind,
                           selected === slot.key,
                         )}`}

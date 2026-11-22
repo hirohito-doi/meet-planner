@@ -23,3 +23,12 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+/* 押せる場所はカーソルを指の形にする(Tailwind 4 はボタンの既定のカーソルを変えないため) */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}

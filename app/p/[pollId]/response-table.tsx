@@ -120,21 +120,6 @@ export function ResponseTable({ poll }: { poll: PollView }) {
       )}
       {error && <p className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-red-700">{error}</p>}
 
-      {myResponse && !finalized && (
-        <div className="space-y-1 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-950">
-          <p>
-            <span className="font-bold">あなたの列</span>(青い列)のマスをタップすると、
-            <span className="font-bold text-emerald-600">○</span>
-            {" → "}
-            <span className="font-bold text-amber-500">△</span>
-            {" → "}
-            <span className="font-bold text-rose-500">×</span>
-            {" → 空欄 の順に切り替わります。自動で保存されます。"}
-          </p>
-          <p className="text-blue-800">名前を押すと、名前を変更できます。</p>
-        </div>
-      )}
-
       {poll.slots.length === 0 ? (
         <p className="rounded-lg border border-dashed border-zinc-300 px-4 py-6 text-center text-zinc-500">
           候補がまだありません。
@@ -153,14 +138,14 @@ export function ResponseTable({ poll }: { poll: PollView }) {
                     <th
                       key={r.id}
                       className={`min-w-16 border-b-2 border-l border-zinc-300 px-2 py-2 text-sm font-bold ${
-                        mine ? "bg-blue-600 text-white" : "text-zinc-800"
+                        mine ? "bg-slate-200 text-slate-900" : "text-zinc-800"
                       }`}
                     >
                       {mine && !finalized ? (
                         <button
                           type="button"
                           onClick={() => setEditingName(true)}
-                          className="rounded px-1 underline decoration-white/60 underline-offset-4 hover:bg-blue-500"
+                          className="rounded px-1 underline decoration-slate-400 underline-offset-4 hover:bg-slate-300"
                         >
                           {r.name}
                         </button>
@@ -200,7 +185,7 @@ export function ResponseTable({ poll }: { poll: PollView }) {
                         <td
                           key={r.id}
                           className={`border-t border-zinc-300 p-0 text-center text-2xl font-bold ${
-                            mine ? "border-x-2 border-x-blue-600" : "border-l"
+                            mine ? "border-x-2 border-x-slate-400" : "border-l"
                           } ${value ? TONE[value] : ""}`}
                         >
                           {mine && !finalized ? (
@@ -213,7 +198,7 @@ export function ResponseTable({ poll }: { poll: PollView }) {
                               {value ? (
                                 <Mark value={value} />
                               ) : (
-                                <span className="h-full w-full rounded border-2 border-dashed border-blue-300" />
+                                <span className="h-full w-full rounded border-2 border-dashed border-zinc-300" />
                               )}
                             </button>
                           ) : (
@@ -298,7 +283,7 @@ function NameDialog({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="名前"
-          className="w-full rounded-lg border-2 border-zinc-300 px-3 py-3 text-lg focus:border-blue-600 focus:outline-none"
+          className="w-full rounded-lg border-2 border-zinc-300 px-3 py-3 text-lg focus:border-zinc-600 focus:outline-none"
         />
         {message && <p className="text-sm text-red-600">{message}</p>}
         <div className="flex justify-end gap-2">
@@ -307,7 +292,7 @@ function NameDialog({
               キャンセル
             </button>
           )}
-          <button type="submit" disabled={pending || !name.trim()} className="rounded-lg bg-blue-600 px-5 py-2.5 font-bold text-white hover:bg-blue-700 disabled:opacity-40">
+          <button type="submit" disabled={pending || !name.trim()} className="rounded-lg bg-zinc-800 px-5 py-2.5 font-bold text-white hover:bg-zinc-700 disabled:opacity-40">
             {submitLabel}
           </button>
         </div>
