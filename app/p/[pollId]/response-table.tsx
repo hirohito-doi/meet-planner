@@ -29,15 +29,17 @@ const TONE: Record<Availability, string> = {
 
 /** 可否の印。太さをそろえるため SVG で描き、読み上げとテストのために記号の文字も持つ */
 function Mark({ value }: { value: Availability }) {
+  // relative: 読み上げ用の文字(sr-only は絶対位置)を、表の枠の中に置くため。
+  // 外にはみ出すと、表の枠のスクロールに収まらずページの幅を押し広げ、スマホでページ全体が縮小表示される
   return (
-    <>
+    <span className="relative inline-flex">
       <svg viewBox="0 0 24 24" aria-hidden className="size-7" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
         {value === "yes" && <circle cx="12" cy="12" r="8.5" />}
         {value === "maybe" && <path d="M12 3.5 21 19.5H3Z" />}
         {value === "no" && <path d="M5 5 19 19M19 5 5 19" />}
       </svg>
       <span className="sr-only">{SYMBOL[value]}</span>
-    </>
+    </span>
   );
 }
 
@@ -57,6 +59,8 @@ export function ResponseTable({ poll }: { poll: Omit<PollView, "ranking"> }) {
   const inTransition = useInTransition();
   // 主催者が回答を削除した後などは、保存したトークンが使えない。消して名前の入力からやり直してもらう
   const myResponse = me ? poll.responses.find((r) => r.id === me.responseId) : undefined;
+  // 自分の列は、横にスクロールしなくても届くように、候補の列のすぐ右に置く。ほかの回答者は登録した順
+  const columns = myResponse ? [myResponse, ...poll.responses.filter((r) => r !== myResponse)] : poll.responses;
   // 登録した直後は、画面のデータに自分の回答がまだ現れていないことがある。現れるまでは消さない
   const joinedId = useRef<string | null>(null);
   useEffect(() => {
@@ -145,20 +149,21 @@ export function ResponseTable({ poll }: { poll: Omit<PollView, "ranking"> }) {
           候補がまだありません。
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-300 shadow-sm">
+        // 表の中で縦にもスクロールさせて、名前の見出しの行を上に固定する
+        <div className="max-h-[75vh] overflow-auto rounded-lg border border-slate-300 shadow-sm">
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-slate-100">
-                <th className="sticky left-0 z-10 border-b-2 border-r border-slate-300 bg-slate-100 px-3 py-2 text-left text-sm font-bold text-slate-700">
+                <th className="sticky left-0 top-0 z-30 border-b-2 border-r border-slate-300 bg-slate-100 px-3 py-2 text-left text-sm font-bold text-slate-700">
                   候補
                 </th>
-                {poll.responses.map((r) => {
+                {columns.map((r) => {
                   const mine = r.id === myResponse?.id;
                   return (
                     <th
                       key={r.id}
-                      className={`min-w-16 border-b-2 border-l border-slate-300 px-2 py-2 text-sm font-bold ${
-                        mine ? "bg-slate-200 text-slate-900" : "text-slate-800"
+                      className={`sticky top-0 z-20 min-w-16 border-b-2 border-l border-slate-300 px-2 py-2 text-sm font-bold ${
+                        mine ? "bg-slate-200 text-slate-900" : "bg-slate-100 text-slate-800"
                       }`}
                     >
                       {mine && !finalized ? (
@@ -198,7 +203,7 @@ export function ResponseTable({ poll }: { poll: Omit<PollView, "ranking"> }) {
                         )}
                       </div>
                     </td>
-                    {poll.responses.map((r) => {
+                    {columns.map((r) => {
                       const mine = r.id === myResponse?.id;
                       const value = mine && slot.id in overrides ? overrides[slot.id] : (r.availabilities[slot.id] ?? null);
                       return (

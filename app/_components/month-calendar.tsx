@@ -27,10 +27,11 @@ export function MonthCalendar({
   onToggle: (date: string) => void;
 }) {
   const today = useToday();
-  // ‹ › で動かした月。動かすまでは今日の月
+  // ‹ › で動かした月。動かすまでは、保存済みの候補があればその最初の月、なければ今日の月
   const [shown, setShown] = useState<{ year: number; month: number } | null>(null);
-  if (!today) return <div className="h-64" />;
-  const { year, month } = shown ?? { year: Number(today.slice(0, 4)), month: Number(today.slice(5, 7)) - 1 };
+  const start = [...fixed].sort()[0] ?? today;
+  if (!start) return <div className="h-64" />;
+  const { year, month } = shown ?? { year: Number(start.slice(0, 4)), month: Number(start.slice(5, 7)) - 1 };
 
   const firstWeekday = new Date(Date.UTC(year, month, 1)).getUTCDay();
   const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();

@@ -57,7 +57,8 @@ export function AdminPanel({ poll, token, created }: { poll: PollView; token: st
             {poll.responses.length === 0 ? (
               <p className="text-sm text-slate-500">まだ回答がありません。</p>
             ) : (
-              <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200">
+              // 人数が多くても下の項目が押し出されないよう、一覧の中でスクロールさせる
+              <ul className="max-h-80 divide-y divide-slate-100 overflow-auto rounded-lg border border-slate-200">
                 {poll.responses.map((r) => (
                   <li key={r.id} className="flex items-center gap-3 px-3 py-2">
                     <span className="font-medium text-slate-900">{r.name}</span>
