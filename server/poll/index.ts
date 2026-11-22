@@ -1,10 +1,9 @@
 import type { Db } from "@/server/db";
-import { type Availability, rankSlots } from "./ranking";
+import { rankSlots } from "./ranking";
 import {
   deleteAvailability,
   findPoll,
   findResponseByToken,
-  hasSlot,
   insertPoll,
   insertResponse,
   saveAvailability,
@@ -12,9 +11,10 @@ import {
 } from "./store";
 import { hashToken, newId, newToken } from "./token";
 import { PollError } from "./errors";
-import { assertNotFinalized } from "./guards";
-import { MAX_SLOTS, type SlotInput, uniqueSlots } from "./slots";
+import { assertNotFinalized, assertSlotCount, assertSlotInPoll } from "./guards";
+import { type SlotInput, uniqueSlots } from "./slots";
 import {
+  type Availability,
   availabilitySchema,
   createPollSchema,
   joinSchema,
@@ -24,7 +24,7 @@ import {
 
 export { PollError, type PollErrorCode } from "./errors";
 export { openAdmin, type Admin } from "./admin";
-export type { Availability } from "./ranking";
+export type { Availability } from "./validation";
 
 
 /** 1つの日程調整の回答者の上限。名前だけ登録した人も1人と数える */
@@ -42,9 +42,7 @@ export type CreatePollInput = {
 export async function createPoll(db: Db, rawInput: CreatePollInput) {
   const input = parse(createPollSchema, rawInput);
   const slots = uniqueSlots(input.slots);
-  if (slots.length > MAX_SLOTS) {
-    throw new PollError("LIMIT_EXCEEDED", `候補は${MAX_SLOTS}件までです`);
-  }
+  assertSlotCount(slots.length);
   const pollId = newId();
   const adminToken = newToken();
   await insertPoll(
@@ -91,9 +89,7 @@ export async function openResponse(db: Db, pollId: string, editToken: string) {
     async setAvailability(slotId: string, rawValue: Availability | null) {
       const value = parse(availabilitySchema, rawValue);
       await assertNotFinalized(db, pollId);
-      if (!(await hasSlot(db, pollId, slotId))) {
-        throw new PollError("INVALID_INPUT", "この日程調整にない候補です");
-      }
+      await assertSlotInPoll(db, pollId, slotId);
       if (value === null) await deleteAvailability(db, response.id, slotId);
       else await saveAvailability(db, response.id, slotId, value);
     },

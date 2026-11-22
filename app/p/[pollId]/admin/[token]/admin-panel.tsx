@@ -6,7 +6,8 @@ import { useState, useSyncExternalStore, useTransition } from "react";
 import { SlotSection } from "@/app/_components/slot-section";
 import { useDraftSlots } from "@/app/_components/use-draft-slots";
 import { formatSlot, jstDate } from "@/lib/jst";
-import type { PollView } from "@/server/poll";
+import type { ActionResult } from "@/app/_lib/action-result";
+import type { Availability, PollView } from "@/server/poll";
 import {
   addSlotsAction,
   deletePollAction,
@@ -17,22 +18,20 @@ import {
   updateDetailsAction,
 } from "./actions";
 
-type Result = { ok: true } | { ok: false; message: string };
-
 export function AdminPanel({ poll, token, created }: { poll: PollView; token: string; created: boolean }) {
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const finalized = poll.finalizedSlotId !== null;
 
   /** 操作を実行し、失敗したらメッセージを出す */
-  const run = (operation: () => Promise<Result | undefined>) =>
+  const run = (operation: () => Promise<ActionResult<unknown> | undefined>) =>
     startTransition(async () => {
       const result = await operation();
       setMessage(result && !result.ok ? result.message : null);
     });
 
   const slotById = new Map(poll.slots.map((s) => [s.id, s]));
-  const countOf = (slotId: string, value: "yes" | "maybe" | "no") =>
+  const countOf = (slotId: string, value: Availability) =>
     poll.responses.filter((r) => r.availabilities[slotId] === value).length;
 
   return (
@@ -84,10 +83,7 @@ export function AdminPanel({ poll, token, created }: { poll: PollView; token: st
                     danger
                     disabled={pending}
                     onClick={() => {
-                      const warning = isFinalized ? "確定も取り消されます。" : "";
-                      if (confirm(`${formatSlot(slot)} を削除します。この候補への回答も消えます。${warning}`)) {
-                        run(() => removeSlotAction(poll.id, token, slotId));
-                      }
+                      if (confirmRemoveSlot(poll, slotId)) run(() => removeSlotAction(poll.id, token, slotId));
                     }}
                   >
                     削除
@@ -143,6 +139,14 @@ export function AdminPanel({ poll, token, created }: { poll: PollView; token: st
   );
 }
 
+/** 候補を削除してよいかを確かめる。確定した候補なら、確定も取り消されることを伝える */
+function confirmRemoveSlot(poll: PollView, slotId: string) {
+  const slot = poll.slots.find((s) => s.id === slotId);
+  if (!slot) return false;
+  const warning = slotId === poll.finalizedSlotId ? "確定も取り消されます。" : "";
+  return confirm(`${formatSlot(slot)} を削除します。この候補への回答も消えます。${warning}`);
+}
+
 function Links({ pollId, token, created }: { pollId: string; token: string; created: boolean }) {
   const origin = useSyncExternalStore(
     () => () => {},
@@ -196,14 +200,11 @@ function SlotEditor({ poll, token }: { poll: PollView; token: string }) {
       <SlotSection
         {...draftSlots}
         dates={dates}
-        locked={poll.slots}
+        saved={poll.slots}
         fixedDates={savedDates}
         canCreate={!finalized}
-        onDeleteLocked={(id) => {
-          const slot = poll.slots.find((s) => s.id === id);
-          if (!slot) return;
-          const warning = id === poll.finalizedSlotId ? "確定も取り消されます。" : "";
-          if (!confirm(`${formatSlot(slot)} を削除します。この候補への回答も消えます。${warning}`)) return;
+        onDeleteSaved={(id) => {
+          if (!confirmRemoveSlot(poll, id)) return;
           startTransition(async () => {
             const result = await removeSlotAction(poll.id, token, id);
             setMessage(result.ok ? null : result.message);

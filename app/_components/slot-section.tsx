@@ -8,16 +8,16 @@ import type { useDraftSlots } from "./use-draft-slots";
 export function SlotSection({
   dates,
   drafts,
-  locked,
+  saved,
   fixedDates,
   addDate,
   removeDate,
   addSlot,
   removeSlot,
-  onDeleteLocked,
+  onDeleteSaved,
   canCreate = true,
 }: ReturnType<typeof useDraftSlots> &
-  Pick<React.ComponentProps<typeof SlotGrid>, "locked" | "fixedDates" | "onDeleteLocked" | "canCreate">) {
+  Pick<React.ComponentProps<typeof SlotGrid>, "saved" | "fixedDates" | "onDeleteSaved" | "canCreate">) {
   /** 列を外す。その列で作った候補があるときは、確かめてから外す */
   const removeDateWithConfirm = (target: string) => {
     const count = drafts.filter((d) => d.date === target).length;
@@ -43,12 +43,12 @@ export function SlotSection({
       <SlotGrid
         dates={dates}
         drafts={drafts}
-        locked={locked}
+        saved={saved}
         onCreate={addSlot}
         onDelete={removeSlot}
         onRemoveDate={removeDateWithConfirm}
         fixedDates={fixedDates}
-        onDeleteLocked={onDeleteLocked}
+        onDeleteSaved={onDeleteSaved}
         canCreate={canCreate}
       />
       {canCreate && <p className="text-xs text-zinc-500">新しい候補: {drafts.length}件</p>}

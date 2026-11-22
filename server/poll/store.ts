@@ -2,7 +2,7 @@
 import { and, asc, eq, inArray, max } from "drizzle-orm";
 import type { Db } from "@/server/db";
 import { availabilities, polls, responses, slots } from "@/server/db/schema";
-import type { Availability } from "./ranking";
+import type { Availability } from "./validation";
 
 export type StoredSlot = { id: string; start: number; end: number };
 

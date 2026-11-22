@@ -1,8 +1,8 @@
 import type { Db } from "@/server/db";
 import { PollError } from "./errors";
-import { assertNotFinalized } from "./guards";
-import { deletePoll, deleteResponse, deleteSlot, findPoll, findPollByAdminToken, hasResponse, hasSlot, insertSlots, setFinalizedSlot, updatePollDetails } from "./store";
-import { MAX_SLOTS, type SlotInput, uniqueSlots } from "./slots";
+import { assertNotFinalized, assertSlotCount, assertSlotInPoll } from "./guards";
+import { deletePoll, deleteResponse, deleteSlot, findPoll, findPollByAdminToken, hasResponse, insertSlots, setFinalizedSlot, updatePollDetails } from "./store";
+import { type SlotInput, uniqueSlots } from "./slots";
 import { hashToken, newId } from "./token";
 import { detailsSchema, parse, slotListSchema } from "./validation";
 
@@ -19,9 +19,7 @@ export async function openAdmin(db: Db, pollId: string, adminToken: string) {
     },
     /** 候補を1件選んで確定する */
     async finalize(slotId: string) {
-      if (!(await hasSlot(db, pollId, slotId))) {
-        throw new PollError("INVALID_INPUT", "この日程調整にない候補です");
-      }
+      await assertSlotInPoll(db, pollId, slotId);
       await setFinalizedSlot(db, pollId, slotId);
     },
     /** 候補を追加する */
@@ -31,15 +29,13 @@ export async function openAdmin(db: Db, pollId: string, adminToken: string) {
       const existing = (await findPoll(db, pollId))!.slots;
       // 既存の候補を先に並べるので、重複したときは既存の候補(とその回答)が残る
       const merged = uniqueSlots<SlotInput & { id?: string }>([...existing, ...added]);
-      if (merged.length > MAX_SLOTS) throw new PollError("LIMIT_EXCEEDED", `候補は${MAX_SLOTS}件までです`);
+      assertSlotCount(merged.length);
       const fresh = merged.filter((s) => s.id === undefined);
       if (fresh.length) await insertSlots(db, pollId, fresh.map((s) => ({ id: newId(), start: s.start, end: s.end })));
     },
     /** 候補を削除する。その候補への可否も消える。確定中でも削除でき、確定した候補なら確定も取り消す */
     async removeSlot(slotId: string) {
-      if (!(await hasSlot(db, pollId, slotId))) {
-        throw new PollError("INVALID_INPUT", "この日程調整にない候補です");
-      }
+      await assertSlotInPoll(db, pollId, slotId);
       await deleteSlot(db, pollId, slotId);
     },
     /** 回答を1人分まとめて削除する。確定中でも削除できる */

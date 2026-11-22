@@ -12,6 +12,7 @@ import {
   useTransition,
 } from "react";
 import { formatSlot } from "@/lib/jst";
+import type { ActionResult } from "@/app/_lib/action-result";
 import type { Availability, PollView } from "@/server/poll";
 import { joinAction, renameAction, setAvailabilityAction } from "./actions";
 
@@ -79,7 +80,7 @@ export function ResponseTable({ poll }: { poll: Omit<PollView, "ranking"> }) {
   const [error, setError] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
 
-  const handleFailure = (result: { ok: false; code: string; message: string }) => {
+  const handleFailure = (result: Extract<ActionResult, { ok: false }>) => {
     if (result.code === "NOT_FOUND") {
       saveMe(null);
       setError("あなたの回答が見つかりませんでした。もう一度名前を入力してください。");

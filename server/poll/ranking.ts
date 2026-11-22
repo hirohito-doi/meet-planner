@@ -1,5 +1,4 @@
-/** 可否: ○ = yes、△ = maybe、× = no */
-export type Availability = "yes" | "maybe" | "no";
+import type { Availability } from "./validation";
 
 export type RankingSlot = { id: string; start: number };
 

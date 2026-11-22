@@ -7,8 +7,8 @@ import { columnsBetween, layout, ROWS, slotFromRows } from "@/lib/slot-grid";
 
 /** 画面の中だけにある、まだ保存していない候補。作った列(date)を覚えておく */
 export type DraftSlot = { key: string; date: string; start: number; end: number };
-/** 保存済みの候補。開始時刻の日付の列に灰色で描く。onDeleteLocked があれば、選んで削除できる */
-export type LockedSlot = { id: string; start: number; end: number };
+/** 保存済みの候補。開始時刻の日付の列に灰色で描く。onDeleteSaved があれば、選んで削除できる */
+export type SavedSlot = { id: string; start: number; end: number };
 
 const ROW_HEIGHT = 22;
 /** 初期表示で表の上端に来る時刻(8:00)の行 */
@@ -16,39 +16,39 @@ const INITIAL_ROW = (8 * 60 + 6 * 60) / 30;
 /** タップとみなす指の移動量の上限 */
 const TAP_SLOP = 10;
 
-type Block = { key: string; start: number; end: number; kind: "draft" | "locked" | "preview" };
+type Block = { key: string; start: number; end: number; kind: "draft" | "saved" | "preview" };
 /** date は始めた列、to は今いる列。横に動かすと、その間の列すべてに同じ時刻の候補を作る */
 type Drag = { date: string; to: string; a: number; b: number; moved: boolean; blockKey: string | null };
-type Touch = { date: string; row: number; blockKey: string | null; x: number; y: number };
+type TapStart = { date: string; row: number; blockKey: string | null; x: number; y: number };
 
 export function SlotGrid({
   dates,
   drafts,
-  locked = [],
+  saved = [],
   onCreate,
   onDelete,
   onRemoveDate,
   fixedDates = [],
-  onDeleteLocked,
+  onDeleteSaved,
   canCreate = true,
 }: {
   dates: string[];
   drafts: DraftSlot[];
-  locked?: LockedSlot[];
+  saved?: SavedSlot[];
   onCreate: (slot: Omit<DraftSlot, "key">) => void;
   onDelete: (key: string) => void;
   onRemoveDate?: (date: string) => void;
   /** 保存済みの候補がある日付。この列は外せない */
   fixedDates?: string[];
   /** 保存済みの候補を削除する */
-  onDeleteLocked?: (id: string) => void;
+  onDeleteSaved?: (id: string) => void;
   /** false なら候補を作れない(確定中)。選択と削除だけできる */
   canCreate?: boolean;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<Drag | null>(null);
-  const touchRef = useRef<Touch | null>(null);
+  const touchRef = useRef<TapStart | null>(null);
   const columnRefs = useRef(new Map<string, HTMLDivElement>());
   const [preview, setPreview] = useState<Drag | null>(null);
   const [pendingStart, setPendingStart] = useState<{ date: string; row: number } | null>(null);
@@ -169,11 +169,11 @@ export function SlotGrid({
   };
 
   const isDraft = (key: string) => drafts.some((d) => d.key === key);
-  const isSelectable = (key: string) => isDraft(key) || (!!onDeleteLocked && locked.some((s) => s.id === key));
+  const isSelectable = (key: string) => isDraft(key) || (!!onDeleteSaved && saved.some((s) => s.id === key));
 
   const blocksOf = (date: string): Block[] => {
     const blocks: Block[] = [
-      ...locked.filter((s) => jstDate(s.start) === date).map((s) => ({ ...s, key: s.id, kind: "locked" as const })),
+      ...saved.filter((s) => jstDate(s.start) === date).map((s) => ({ ...s, key: s.id, kind: "saved" as const })),
       ...drafts.filter((d) => d.date === date).map((d) => ({ ...d, kind: "draft" as const })),
     ];
     // 作成中の候補(ドラッグ中のプレビュー、スマホの開始の印)も、作成後と同じ幅と位置で並べる
@@ -290,7 +290,7 @@ export function SlotGrid({
             className="rounded bg-red-600 px-4 py-2 text-white"
             onClick={() => {
               if (isDraft(selected)) onDelete(selected);
-              else onDeleteLocked?.(selected);
+              else onDeleteSaved?.(selected);
               setSelected(null);
             }}
           >
@@ -311,7 +311,7 @@ function rowLabel(row: number) {
 }
 
 function blockStyle(kind: Block["kind"], selected: boolean) {
-  if (kind === "locked") return selected ? "border-zinc-800 bg-zinc-600 text-white ring-2 ring-zinc-300" : "border-zinc-400 bg-zinc-200 text-zinc-600";
+  if (kind === "saved") return selected ? "border-zinc-800 bg-zinc-600 text-white ring-2 ring-zinc-300" : "border-zinc-400 bg-zinc-200 text-zinc-600";
   if (kind === "preview") return "border-dashed border-blue-500 bg-blue-100/70 text-blue-900";
   return selected ? "border-blue-900 bg-blue-700 text-white ring-2 ring-blue-300" : "border-blue-600 bg-blue-500 text-white";
 }

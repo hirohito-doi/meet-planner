@@ -33,8 +33,12 @@ export const joinSchema = z.object({ name });
 
 export const renameSchema = z.object({ name });
 
-/** 可否。null は未回答に戻す */
-export const availabilitySchema = z.enum(["yes", "maybe", "no"]).nullable();
+/** 可否: ○ = yes、△ = maybe、× = no */
+const availability = z.enum(["yes", "maybe", "no"]);
+export type Availability = z.infer<typeof availability>;
+
+/** 可否の保存。null は未回答に戻す */
+export const availabilitySchema = availability.nullable();
 
 /** zod で検証し、失敗したら PollError("INVALID_INPUT") を投げる */
 export function parse<T extends z.ZodType>(schema: T, input: unknown): z.output<T> {
