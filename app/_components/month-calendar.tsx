@@ -45,13 +45,13 @@ export function MonthCalendar({
   return (
     <div className="w-72 rounded border border-zinc-300 p-2">
       <div className="mb-1 flex items-center justify-between">
-        <button type="button" aria-label="前の月" onClick={() => move(-1)} className="rounded px-2 py-1 hover:bg-zinc-100">
+        <button type="button" aria-label="前の月" onClick={() => move(-1)} className="flex size-10 items-center justify-center rounded border border-zinc-300 text-xl hover:bg-zinc-100">
           ‹
         </button>
         <span className="text-sm font-medium">
           {year}年{month + 1}月
         </span>
-        <button type="button" aria-label="次の月" onClick={() => move(1)} className="rounded px-2 py-1 hover:bg-zinc-100">
+        <button type="button" aria-label="次の月" onClick={() => move(1)} className="flex size-10 items-center justify-center rounded border border-zinc-300 text-xl hover:bg-zinc-100">
           ›
         </button>
       </div>

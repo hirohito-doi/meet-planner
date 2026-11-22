@@ -190,7 +190,7 @@ export function SlotGrid({
                   <button
                     type="button"
                     aria-label={`${formatDay(jstMidnight(date))}を外す`}
-                    className="rounded px-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+                    className="flex size-8 items-center justify-center rounded text-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"
                     onClick={() => onRemoveDate(date)}
                   >
                     ×
