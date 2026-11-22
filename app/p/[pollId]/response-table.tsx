@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { formatSlot } from "@/lib/jst";
 import type { Availability, PollView } from "@/server/poll";
-import { joinAction, setAvailabilityAction, updateProfileAction } from "./actions";
+import { joinAction, renameAction, setAvailabilityAction } from "./actions";
 
 type Me = { responseId: string; editToken: string };
 type Cell = Availability | null;
@@ -68,9 +68,9 @@ export function ResponseTable({ poll }: { poll: PollView }) {
     }, SAVE_DELAY);
   };
 
-  const saveProfile = async (profile: { name: string; comment: string }) => {
+  const rename = async (name: string) => {
     if (!me) return false;
-    const result = await inTransition(() => updateProfileAction(poll.id, me.editToken, profile));
+    const result = await inTransition(() => renameAction(poll.id, me.editToken, name));
     if (!result.ok) handleFailure(result);
     return result.ok;
   };
@@ -149,37 +149,6 @@ export function ResponseTable({ poll }: { poll: PollView }) {
         </div>
       )}
 
-      {myResponse && !finalized && (
-        <label className="block space-y-1">
-          <span className="text-sm font-medium">コメント</span>
-          <textarea
-            key={myResponse.id}
-            maxLength={200}
-            rows={2}
-            defaultValue={myResponse.comment}
-            onBlur={(e) => {
-              if (e.target.value !== myResponse.comment) saveProfile({ name: myResponse.name, comment: e.target.value });
-            }}
-            className="w-full rounded border border-zinc-300 px-3 py-2"
-          />
-        </label>
-      )}
-
-      {poll.responses.some((r) => r.comment) && (
-        <section className="space-y-1">
-          <h2 className="text-sm font-medium">コメント</h2>
-          <ul className="space-y-1 text-sm">
-            {poll.responses
-              .filter((r) => r.comment)
-              .map((r) => (
-                <li key={r.id}>
-                  <span className="font-medium">{r.name}</span>: {r.comment}
-                </li>
-              ))}
-          </ul>
-        </section>
-      )}
-
       {needsName && (
         <NameDialog
           title="名前を入力して回答を始めます"
@@ -202,7 +171,7 @@ export function ResponseTable({ poll }: { poll: PollView }) {
           initialName={myResponse.name}
           onCancel={() => setEditingName(false)}
           onSubmit={async (name) => {
-            const ok = await saveProfile({ name, comment: myResponse.comment });
+            const ok = await rename(name);
             if (ok) setEditingName(false);
             return null;
           }}

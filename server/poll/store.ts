@@ -8,7 +8,7 @@ export type StoredSlot = { id: string; start: number; end: number };
 
 export async function insertResponse(
   db: Db,
-  response: { id: string; pollId: string; name: string; comment: string; editTokenHash: string; createdAt: number },
+  response: { id: string; pollId: string; name: string; editTokenHash: string; createdAt: number },
 ) {
   await db.insert(responses).values(response);
 }
@@ -53,7 +53,6 @@ export async function findPoll(db: Db, pollId: string) {
     responses: responseRows.map((r) => ({
       id: r.id,
       name: r.name,
-      comment: r.comment,
       availabilities: Object.fromEntries(
         answerRows.filter((a) => a.responseId === r.id).map((a) => [a.slotId, a.value]),
       ) as Record<string, Availability>,
@@ -91,8 +90,8 @@ export async function hasSlot(db: Db, pollId: string, slotId: string) {
   return row !== undefined;
 }
 
-export async function updateResponseProfile(db: Db, responseId: string, profile: { name: string; comment: string }) {
-  await db.update(responses).set(profile).where(eq(responses.id, responseId));
+export async function updateResponseName(db: Db, responseId: string, name: string) {
+  await db.update(responses).set({ name }).where(eq(responses.id, responseId));
 }
 
 /** 管理トークンのハッシュから日程調整を探す。なければ null */

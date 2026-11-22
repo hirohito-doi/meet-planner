@@ -108,7 +108,6 @@ export function AdminPanel({ poll, token, created }: { poll: PollView; token: st
           {poll.responses.map((r) => (
             <li key={r.id} className="flex items-center gap-3 px-3 py-2">
               <span className="font-medium">{r.name}</span>
-              {r.comment && <span className="text-sm text-zinc-600">{r.comment}</span>}
               <span className="ml-auto">
                 <Button
                   danger

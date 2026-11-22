@@ -24,14 +24,13 @@ export const slots = sqliteTable(
   (t) => [index("slots_poll_id_idx").on(t.pollId)],
 );
 
-/** 回答 (Response): 1人の回答者が提出したもの全体 */
+/** 回答 (Response): 1人の回答者の名前と、各候補への可否 */
 export const responses = sqliteTable(
   "responses",
   {
     id: text("id").primaryKey(),
     pollId: text("poll_id").notNull(),
     name: text("name").notNull(),
-    comment: text("comment").notNull().default(""),
     /** 編集用トークンの SHA-256 (ADR 0001) */
     editTokenHash: text("edit_token_hash").notNull().unique(),
     createdAt: integer("created_at").notNull(),

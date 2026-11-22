@@ -28,14 +28,10 @@ export async function setAvailabilityAction(
   return result;
 }
 
-export async function updateProfileAction(
-  pollId: string,
-  editToken: string,
-  profile: { name: string; comment: string },
-): Promise<ActionResult> {
+export async function renameAction(pollId: string, editToken: string, name: string): Promise<ActionResult> {
   const result = await runAction(async () => {
     const me = await openMe(pollId, editToken);
-    await me.updateProfile(profile);
+    await me.rename(name);
     return null;
   });
   refresh();

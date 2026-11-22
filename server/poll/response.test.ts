@@ -21,14 +21,12 @@ async function setup() {
 }
 
 describe("回答者としての登録", () => {
-  test("登録すると、すべて未回答でコメントのない回答者として表示される", async () => {
+  test("登録すると、すべて未回答の回答者として表示される", async () => {
     const { db, pollId } = await setup();
 
-    await join(db, pollId, { name: "田中" });
+    const { responseId } = await join(db, pollId, { name: "田中" });
 
-    expect((await readPoll(db, pollId))?.responses).toMatchObject([
-      { name: "田中", availabilities: {}, comment: "" },
-    ]);
+    expect((await readPoll(db, pollId))?.responses).toEqual([{ id: responseId, name: "田中", availabilities: {} }]);
   });
 
   test("存在しない日程調整には登録できない", async () => {
@@ -70,13 +68,10 @@ describe("回答者としての登録", () => {
 
     const me = await openResponse(db, pollId, editToken);
     await me!.setAvailability(dec3, "yes");
-    await me!.updateProfile({ name: "田中", comment: "よろしくお願いします" });
+    await me!.rename("田中");
 
     const responses = (await readPoll(db, pollId))!.responses;
-    expect(responses.find((r) => r.name === "田中")).toMatchObject({
-      availabilities: { [dec3]: "yes" },
-      comment: "よろしくお願いします",
-    });
+    expect(responses.find((r) => r.name === "田中")).toMatchObject({ availabilities: { [dec3]: "yes" } });
   });
 });
 
@@ -137,44 +132,38 @@ describe("可否の保存の検証", () => {
   });
 });
 
-describe("名前とコメントの保存", () => {
-  test("名前とコメントを保存すると、回答画面に表示される", async () => {
+describe("名前の変更", () => {
+  test("名前を変更すると、回答画面に表示される", async () => {
     const { db, pollId } = await setup();
     const { editToken } = await join(db, pollId, { name: "田中" });
     const me = await openResponse(db, pollId, editToken);
 
-    await me!.updateProfile({ name: "田中太郎", comment: "20時以降なら参加できます" });
+    await me!.rename("田中太郎");
 
-    expect((await readPoll(db, pollId))?.responses).toMatchObject([
-      { name: "田中太郎", comment: "20時以降なら参加できます" },
-    ]);
+    expect((await readPoll(db, pollId))?.responses).toMatchObject([{ name: "田中太郎" }]);
   });
 
   test.each([
-    ["名前が空", { name: "", comment: "" }],
-    ["名前が空白だけ", { name: "　 ", comment: "" }],
-    ["名前が31文字", { name: "あ".repeat(31), comment: "" }],
-    ["コメントが201文字", { name: "田中", comment: "あ".repeat(201) }],
-  ])("%sなら保存できない", async (_, profile) => {
+    ["空", ""],
+    ["空白だけ", "　 "],
+    ["31文字", "あ".repeat(31)],
+  ])("名前が%sなら変更できない", async (_, name) => {
     const { db, pollId } = await setup();
     const { editToken } = await join(db, pollId, { name: "田中" });
     const me = await openResponse(db, pollId, editToken);
 
-    await expect(me!.updateProfile(profile)).rejects.toMatchObject({ code: "INVALID_INPUT" });
+    await expect(me!.rename(name)).rejects.toMatchObject({ code: "INVALID_INPUT" });
   });
 
-  test("名前とコメントは前後の空白を取り除いて保存し、取り除いた後の上限の文字数までは保存できる", async () => {
+  test("名前は前後の空白を取り除いて保存し、取り除いた後の30文字までは保存できる", async () => {
     const { db, pollId } = await setup();
     const { editToken } = await join(db, pollId, { name: "田中" });
     const me = await openResponse(db, pollId, editToken);
     const name = "あ".repeat(30);
-    const comment = "い".repeat(200);
 
-    await me!.updateProfile({ name: ` ${name} `, comment: `
-${comment}
-` });
+    await me!.rename(` ${name} `);
 
-    expect((await readPoll(db, pollId))?.responses).toMatchObject([{ name, comment }]);
+    expect((await readPoll(db, pollId))?.responses).toMatchObject([{ name }]);
   });
 });
 
@@ -213,7 +202,7 @@ describe("回答者の並び順", () => {
     for (const name of names) tokens.push((await join(db, pollId, { name })).editToken);
 
     const first = await openResponse(db, pollId, tokens[0]);
-    await first!.updateProfile({ name: "佐藤(更新)", comment: "" });
+    await first!.rename("佐藤(更新)");
 
     expect((await readPoll(db, pollId))!.responses.map((r) => r.name)).toEqual([
       "佐藤(更新)",

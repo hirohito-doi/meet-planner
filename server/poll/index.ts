@@ -8,7 +8,7 @@ import {
   insertPoll,
   insertResponse,
   saveAvailability,
-  updateResponseProfile,
+  updateResponseName,
 } from "./store";
 import { hashToken, newId, newToken } from "./token";
 import { PollError } from "./errors";
@@ -19,7 +19,7 @@ import {
   createPollSchema,
   joinSchema,
   parse,
-  profileSchema,
+  renameSchema,
 } from "./validation";
 
 export { PollError, type PollErrorCode } from "./errors";
@@ -76,7 +76,6 @@ export async function join(db: Db, pollId: string, rawInput: { name: string }) {
     id: responseId,
     pollId,
     name: input.name,
-    comment: "",
     editTokenHash: hashToken(editToken),
     createdAt: Date.now(),
   });
@@ -98,11 +97,11 @@ export async function openResponse(db: Db, pollId: string, editToken: string) {
       if (value === null) await deleteAvailability(db, response.id, slotId);
       else await saveAvailability(db, response.id, slotId, value);
     },
-    /** 名前とコメントを保存する */
-    async updateProfile(rawInput: { name: string; comment: string }) {
-      const profile = parse(profileSchema, rawInput);
+    /** 名前を変更する */
+    async rename(rawName: string) {
+      const { name } = parse(renameSchema, { name: rawName });
       await assertNotFinalized(db, pollId);
-      await updateResponseProfile(db, response.id, profile);
+      await updateResponseName(db, response.id, name);
     },
   };
 }

@@ -31,7 +31,7 @@ const name = z.string().trim().min(1).max(30);
 
 export const joinSchema = z.object({ name });
 
-export const profileSchema = z.object({ name, comment: z.string().trim().max(200) });
+export const renameSchema = z.object({ name });
 
 /** 可否。null は未回答に戻す */
 export const availabilitySchema = z.enum(["yes", "maybe", "no"]).nullable();

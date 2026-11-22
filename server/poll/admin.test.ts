@@ -124,13 +124,13 @@ describe("確定中は読み取り専用", () => {
     await expect(me!.setAvailability(dec3, "yes")).rejects.toMatchObject({ code: "FINALIZED" });
   });
 
-  test("確定中は、名前とコメントを保存できない", async () => {
+  test("確定中は、名前を変更できない", async () => {
     const { db, pollId, adminToken, dec3 } = await setup();
     const { editToken } = await join(db, pollId, { name: "田中" });
     const me = await openResponse(db, pollId, editToken);
     await (await openAdmin(db, pollId, adminToken))!.finalize(dec3);
 
-    await expect(me!.updateProfile({ name: "田中太郎", comment: "" })).rejects.toMatchObject({ code: "FINALIZED" });
+    await expect(me!.rename("田中太郎")).rejects.toMatchObject({ code: "FINALIZED" });
   });
 
   test("確定中は、タイトルと説明を変更できない", async () => {
