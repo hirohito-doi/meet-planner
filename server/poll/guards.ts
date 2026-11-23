@@ -1,11 +1,11 @@
 import type { Db } from "@/server/db";
-import { PollError } from "./errors";
+import { finalizedError, PollError } from "./errors";
 import { MAX_SLOTS } from "./slots";
 import { hasSlot, isFinalized } from "./store";
 
-/** 確定中なら PollError("FINALIZED") を投げる。確定中は日程調整全体が読み取り専用 */
+/** 確定中なら PollError("FINALIZED") を投げる */
 export async function assertNotFinalized(db: Db, pollId: string) {
-  if (await isFinalized(db, pollId)) throw new PollError("FINALIZED", "日程が確定しているため変更できません");
+  if (await isFinalized(db, pollId)) throw finalizedError();
 }
 
 /** この日程調整の候補でなければ PollError("INVALID_INPUT") を投げる */

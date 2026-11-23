@@ -18,3 +18,6 @@ export class PollError extends Error {
     this.name = "PollError";
   }
 }
+
+/** 確定中に変更しようとしたときのエラー。確定中は日程調整全体が読み取り専用。文言はそのまま画面に出る */
+export const finalizedError = () => new PollError("FINALIZED", "日程が確定しているため変更できません。");
