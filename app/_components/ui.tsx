@@ -80,3 +80,24 @@ export const inputClass =
 export function ErrorMessage({ children }: { children: React.ReactNode }) {
   return <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{children}</p>;
 }
+
+/** 読み込み中の表示 */
+export function Loading() {
+  return (
+    <div role="status" className="flex items-center gap-3 px-4 py-16 text-sm text-slate-500 sm:px-6">
+      <span className="size-5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" aria-hidden />
+      読み込んでいます…
+    </div>
+  );
+}
+
+/** 見つからないときやエラーのときに、画面の中央に出す案内 */
+export function Notice({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center gap-4 px-4 py-16 text-center">
+      <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
+      <div className="space-y-1 text-slate-600">{children}</div>
+      {action}
+    </main>
+  );
+}
