@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { columnsBetween, layout, resizeSlot, ROWS, slotFromRows } from "./index";
+import { columnsBetween, layout, resizeSlot, rowsInColumn, ROWS, slotFromRows } from "./index";
 
 const at = (iso: string) => new Date(iso).getTime();
 
@@ -96,5 +96,17 @@ describe("選んだ候補の上端・下端をドラッグして伸び縮みさ�
   test("表の外まで動かしても、その列の前日 18:00〜翌日 6:00 に収まる", () => {
     expect(resizeSlot("2026-12-03", draft, "start", -5)).toEqual({ ...draft, start: at("2026-12-02T18:00:00+09:00") });
     expect(resizeSlot("2026-12-03", draft, "end", ROWS + 5)).toEqual({ ...draft, end: at("2026-12-04T06:00:00+09:00") });
+  });
+});
+
+describe("候補を列のどの行に描くか", () => {
+  test("列の中に収まる候補は、開始の行から長さぶんの行に描く", () => {
+    // 12/3 の列で 10:00-12:00 → 32行目から4行
+    expect(rowsInColumn("2026-12-03", { start: at("2026-12-03T10:00:00+09:00"), end: at("2026-12-03T12:00:00+09:00") })).toEqual({ top: 32, rows: 4 });
+  });
+
+  test("列の終わり(翌日 6:00)を越える候補は、列の終わりで切る", () => {
+    // 12/3 の列で 20:00〜翌 10:00 → 52行目から、列の終わりの72行目まで
+    expect(rowsInColumn("2026-12-03", { start: at("2026-12-03T20:00:00+09:00"), end: at("2026-12-04T10:00:00+09:00") })).toEqual({ top: 52, rows: ROWS - 52 });
   });
 });

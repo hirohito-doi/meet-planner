@@ -3,7 +3,7 @@
 // 候補を作る表。docs/spec.md「候補の作成」「表のレイアウト」
 import { useEffect, useRef, useState } from "react";
 import { formatClockInColumn, formatDay, jstDate, jstMidnight } from "@/lib/jst";
-import { columnsBetween, layout, resizeSlot, ROWS, slotFromRows } from "@/lib/slot-grid";
+import { columnsBetween, layout, resizeSlot, rowsInColumn, ROWS, slotFromRows } from "@/lib/slot-grid";
 
 /** 画面の中だけにある、まだ保存していない候補。作った列(date)を覚えておく */
 export type DraftSlot = { key: string; date: string; start: number; end: number };
@@ -218,7 +218,6 @@ export function SlotGrid({
     return blocks;
   };
 
-  const rowOf = (date: string, time: number) => (time - jstMidnight(date) + 6 * 60 * 60 * 1000) / (30 * 60 * 1000);
 
   return (
     <div ref={rootRef} className="relative select-none">
@@ -285,13 +284,14 @@ export function SlotGrid({
                 <div className="absolute inset-y-0 left-0 right-6">
                   {layout(blocksOf(date)).map(({ slot, lane, lanes }) => {
                     const width = `min(160px, calc(100% / ${lanes}))`;
+                    const { top, rows } = rowsInColumn(date, slot);
                     return (
                       <div
                         key={slot.key}
                         data-block-key={slot.kind === "preview" ? undefined : slot.key}
                         style={{
-                          top: rowOf(date, slot.start) * ROW_HEIGHT,
-                          height: ((slot.end - slot.start) / (30 * 60 * 1000)) * ROW_HEIGHT,
+                          top: top * ROW_HEIGHT,
+                          height: rows * ROW_HEIGHT,
                           left: `calc(${lane} * ${width})`,
                           width,
                         }}
@@ -307,7 +307,7 @@ export function SlotGrid({
                         <span className="block h-full overflow-hidden">
                           {formatClockInColumn(date, slot.start)}-{formatClockInColumn(date, slot.end, { isEnd: true })}
                         </span>
-                        {/* つまみは枠の外に出し、短い候補でも時刻の文字と重ならないようにする */}
+                        {/* つまみはブロックの外に出し、短い候補でも時刻の文字と重ならないようにする */}
                         {onResize &&
                           slot.kind === "draft" &&
                           selected === slot.key &&
