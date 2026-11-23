@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AppHeader } from "./_components/ui";
+import { AppHeader, Marks } from "./_components/ui";
 
 // サービスの紹介ページ。日程調整はここでは作らず、作成画面(/new)へ案内する
 const STEPS = [
@@ -20,7 +20,9 @@ export default function Home() {
       <AppHeader />
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-12 sm:px-6 sm:py-16">
         <section className="flex flex-col items-center gap-6 text-center">
-          <Marks />
+          <div className="flex gap-2">
+            <Marks className="size-10" />
+          </div>
           <h1 className="text-3xl font-bold leading-snug text-accent-soft-ink sm:text-4xl">
             みんなの都合を集めて、
             <br />
@@ -73,22 +75,5 @@ function CreateLink() {
     <Link href="/new" className="rounded-lg bg-accent px-8 py-3.5 text-lg font-bold text-on-accent shadow-sm hover:bg-accent-strong">
       日程調整を作る
     </Link>
-  );
-}
-
-/** 回答画面と同じ色の ○△×(飾り) */
-function Marks() {
-  return (
-    <div aria-hidden className="flex gap-4">
-      <svg viewBox="0 0 24 24" className="size-10 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={3}>
-        <circle cx="12" cy="12" r="8.5" />
-      </svg>
-      <svg viewBox="0 0 24 24" className="size-10 text-amber-500" fill="none" stroke="currentColor" strokeWidth={3} strokeLinejoin="round">
-        <path d="M12 3.5 21 19.5H3Z" />
-      </svg>
-      <svg viewBox="0 0 24 24" className="size-10 text-rose-500" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round">
-        <path d="M5 5 19 19M19 5 5 19" />
-      </svg>
-    </div>
   );
 }

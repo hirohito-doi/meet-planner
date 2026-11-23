@@ -1,13 +1,16 @@
 // 画面に共通する見た目の部品。色は白地に slate を基本にし、色は可否と注意の表示だけに使う
 import Link from "next/link";
+import { SITE_NAME } from "@/app/_lib/site";
 
 /** 全画面の上に出す帯 */
 export function AppHeader({ label }: { label?: string }) {
   return (
     <header className="border-b border-line bg-header">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-        <Link href="/" className="font-bold text-header-ink">
-          meet-planner
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6">
+        {/* サービス名の ○△× は、回答画面と同じ色のマークで描く。読み上げではサービス名をそのまま読む */}
+        <Link href="/" aria-label={SITE_NAME} className="flex items-center gap-2 text-lg font-bold text-header-ink sm:text-xl">
+          <Marks className="size-5 sm:size-6" />
+          <span>日程調整</span>
         </Link>
         {/* 画面の名前があればそれを、なければ(紹介ページなど)作成画面への入り口を出す */}
         {label ? (
@@ -106,5 +109,22 @@ export function Notice({ title, children, action }: { title: string; children: R
       <div className="space-y-1 text-slate-600">{children}</div>
       {action}
     </main>
+  );
+}
+
+/** 回答画面と同じ色の ○△×(飾り。読み上げない) */
+export function Marks({ className }: { className: string }) {
+  return (
+    <span aria-hidden className="flex gap-[0.15em]">
+      <svg viewBox="0 0 24 24" className={`${className} text-emerald-600`} fill="none" stroke="currentColor" strokeWidth={3}>
+        <circle cx="12" cy="12" r="8.5" />
+      </svg>
+      <svg viewBox="0 0 24 24" className={`${className} text-amber-500`} fill="none" stroke="currentColor" strokeWidth={3} strokeLinejoin="round">
+        <path d="M12 3.5 21 19.5H3Z" />
+      </svg>
+      <svg viewBox="0 0 24 24" className={`${className} text-rose-500`} fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round">
+        <path d="M5 5 19 19M19 5 5 19" />
+      </svg>
+    </span>
   );
 }
