@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { columnsBetween, layout, ROWS, slotFromRows } from "./index";
+import { columnsBetween, layout, resizeSlot, ROWS, slotFromRows } from "./index";
 
 const at = (iso: string) => new Date(iso).getTime();
 
@@ -70,5 +70,31 @@ describe("横にドラッグした範囲の列", () => {
     const dates = ["2026-12-03", "2026-12-05", "2026-12-08", "2026-12-10"];
 
     expect(columnsBetween(dates, "2026-12-08", "2026-12-03")).toEqual(["2026-12-03", "2026-12-05", "2026-12-08"]);
+  });
+});
+
+describe("選んだ候補の上端・下端をドラッグして伸び縮みさせる", () => {
+  // 12/3 10:00-12:00。32行目は 10:00、35行目は 11:30 のマス
+  const draft = { start: at("2026-12-03T10:00:00+09:00"), end: at("2026-12-03T12:00:00+09:00") };
+
+  test("下端を 13:00 のマスまで動かすと、終了が 13:30 になる(そのマスの終わりまで)", () => {
+    expect(resizeSlot("2026-12-03", draft, "end", 38)).toEqual({ ...draft, end: at("2026-12-03T13:30:00+09:00") });
+  });
+
+  test("上端を 9:00 のマスまで動かすと、開始が 9:00 になる", () => {
+    expect(resizeSlot("2026-12-03", draft, "start", 30)).toEqual({ ...draft, start: at("2026-12-03T09:00:00+09:00") });
+  });
+
+  test("下端を開始より上へ動かしても、30分の候補で止まる(上下は入れ替わらない)", () => {
+    expect(resizeSlot("2026-12-03", draft, "end", 20)).toEqual({ ...draft, end: at("2026-12-03T10:30:00+09:00") });
+  });
+
+  test("上端を終了より下へ動かしても、30分の候補で止まる", () => {
+    expect(resizeSlot("2026-12-03", draft, "start", 60)).toEqual({ ...draft, start: at("2026-12-03T11:30:00+09:00") });
+  });
+
+  test("表の外まで動かしても、その列の前日 18:00〜翌日 6:00 に収まる", () => {
+    expect(resizeSlot("2026-12-03", draft, "start", -5)).toEqual({ ...draft, start: at("2026-12-02T18:00:00+09:00") });
+    expect(resizeSlot("2026-12-03", draft, "end", ROWS + 5)).toEqual({ ...draft, end: at("2026-12-04T06:00:00+09:00") });
   });
 });

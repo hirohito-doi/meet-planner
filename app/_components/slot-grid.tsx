@@ -3,7 +3,7 @@
 // 候補を作る表。docs/spec.md「候補の作成」「表のレイアウト」
 import { useEffect, useRef, useState } from "react";
 import { formatClockInColumn, formatDay, jstDate, jstMidnight } from "@/lib/jst";
-import { columnsBetween, layout, ROWS, slotFromRows } from "@/lib/slot-grid";
+import { columnsBetween, layout, resizeSlot, ROWS, slotFromRows } from "@/lib/slot-grid";
 
 /** 画面の中だけにある、まだ保存していない候補。作った列(date)を覚えておく */
 export type DraftSlot = { key: string; date: string; start: number; end: number };
@@ -20,6 +20,8 @@ type Block = { key: string; start: number; end: number; kind: "draft" | "saved" 
 /** date は始めた列、to は今いる列。横に動かすと、その間の列すべてに同じ時刻の候補を作る */
 type Drag = { date: string; to: string; a: number; b: number; moved: boolean; blockKey: string | null };
 type TapStart = { date: string; row: number; blockKey: string | null; x: number; y: number };
+/** 選んだ候補の上端か下端のつまみをドラッグしている間の状態 */
+type Resize = { key: string; date: string; edge: "start" | "end" };
 
 export function SlotGrid({
   dates,
@@ -27,6 +29,7 @@ export function SlotGrid({
   saved = [],
   onCreate,
   onDelete,
+  onResize,
   onRemoveDate,
   fixedDates = [],
   onDeleteSaved,
@@ -37,6 +40,8 @@ export function SlotGrid({
   saved?: SavedSlot[];
   onCreate: (slot: Omit<DraftSlot, "key">) => void;
   onDelete: (key: string) => void;
+  /** 選んだ新しい候補の時刻を、上下のつまみで変える。ないときはつまみを出さない */
+  onResize?: (key: string, range: { start: number; end: number }) => void;
   onRemoveDate?: (date: string) => void;
   /** 保存済みの候補がある日付。この列は外せない */
   fixedDates?: string[];
@@ -49,6 +54,7 @@ export function SlotGrid({
   const scrollRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<Drag | null>(null);
   const touchRef = useRef<TapStart | null>(null);
+  const resizeRef = useRef<Resize | null>(null);
   const columnRefs = useRef(new Map<string, HTMLDivElement>());
   const [preview, setPreview] = useState<Drag | null>(null);
   const [pendingStart, setPendingStart] = useState<{ date: string; row: number } | null>(null);
@@ -168,6 +174,31 @@ export function SlotGrid({
     }
   };
 
+  // 上下のつまみ: 選んだ新しい候補の開始・終了を、つまみを動かした先のマスに合わせる(PC もスマホも同じ)。
+  // 表のほかの操作(候補の作成、選択の解除)に伝えないよう、イベントはここで止める
+  // どの候補のどちらの端かは、つまみの data-* 属性から読む
+  const startResize = (e: React.PointerEvent<HTMLElement>) => {
+    e.stopPropagation();
+    const { resizeHandle, resizeKey, resizeDate } = e.currentTarget.dataset;
+    if (!resizeKey || !resizeDate || (resizeHandle !== "start" && resizeHandle !== "end")) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    resizeRef.current = { key: resizeKey, date: resizeDate, edge: resizeHandle };
+  };
+  const moveResize = (e: React.PointerEvent<HTMLElement>) => {
+    e.stopPropagation();
+    const resize = resizeRef.current;
+    const draft = resize && drafts.find((d) => d.key === resize.key);
+    const column = resize && columnRefs.current.get(resize.date);
+    if (!resize || !draft || !column) return;
+    const row = Math.floor((e.clientY - column.getBoundingClientRect().top) / ROW_HEIGHT);
+    const next = resizeSlot(resize.date, draft, resize.edge, row);
+    if (next.start !== draft.start || next.end !== draft.end) onResize?.(resize.key, next);
+  };
+  const endResize = (e: React.PointerEvent<HTMLElement>) => {
+    e.stopPropagation();
+    resizeRef.current = null;
+  };
+
   const isDraft = (key: string) => drafts.some((d) => d.key === key);
   const isSelectable = (key: string) => isDraft(key) || (!!onDeleteSaved && saved.some((s) => s.id === key));
 
@@ -190,7 +221,7 @@ export function SlotGrid({
   const rowOf = (date: string, time: number) => (time - jstMidnight(date) + 6 * 60 * 60 * 1000) / (30 * 60 * 1000);
 
   return (
-    <div ref={rootRef} className="select-none">
+    <div ref={rootRef} className="relative select-none">
       <div ref={scrollRef} className="relative max-h-[60vh] overflow-auto rounded border border-slate-300 bg-white">
         <div className="flex min-w-full">
           {/* 時刻の目盛り */}
@@ -205,9 +236,7 @@ export function SlotGrid({
           {/* 日付がまだないときも、時刻の目盛りと空の列を出しておく */}
           {dates.length === 0 && (
             <div className="flex-1 border-l border-slate-300">
-              <div className="sticky top-0 z-10 flex h-10 items-center justify-center border-b border-slate-300 bg-white text-sm text-slate-400">
-                日付を選んでください
-              </div>
+              <div className="sticky top-0 z-10 h-10 border-b border-slate-300 bg-white" />
               <div style={{ height: ROWS * ROW_HEIGHT }} />
             </div>
           )}
@@ -267,6 +296,8 @@ export function SlotGrid({
                           width,
                         }}
                         className={`absolute overflow-hidden rounded border px-1 text-xs leading-tight ${
+                          onResize && slot.kind === "draft" && selected === slot.key ? "pt-3" : ""
+                        } ${
                           slot.kind !== "preview" && isSelectable(slot.key) ? "cursor-pointer" : "cursor-default"
                         } ${blockStyle(
                           slot.kind,
@@ -274,6 +305,27 @@ export function SlotGrid({
                         )}`}
                       >
                         {formatClockInColumn(date, slot.start)}-{formatClockInColumn(date, slot.end, { isEnd: true })}
+                        {onResize &&
+                          slot.kind === "draft" &&
+                          selected === slot.key &&
+                          (["start", "end"] as const).map((edge) => (
+                            <span
+                              key={edge}
+                              data-resize-handle={edge}
+                              data-resize-key={slot.key}
+                              data-resize-date={date}
+                              aria-hidden
+                              className={`absolute inset-x-0 flex h-3 cursor-ns-resize touch-none justify-center ${
+                                edge === "start" ? "top-0 items-start" : "bottom-0 items-end"
+                              }`}
+                              onPointerDown={startResize}
+                              onPointerMove={moveResize}
+                              onPointerUp={endResize}
+                              onPointerCancel={endResize}
+                            >
+                              <span className="my-0.5 h-1 w-6 rounded-full bg-on-accent/70" />
+                            </span>
+                          ))}
                       </div>
                     );
                   })}
@@ -283,6 +335,12 @@ export function SlotGrid({
           ))}
         </div>
       </div>
+      {/* 日付がないときの案内。スクロールしても動かないよう、表の枠の上に重ねて、時刻の目盛り(w-16)と見出しの行(h-10)を除いた範囲の真ん中に置く */}
+      {dates.length === 0 && (
+        <div className="pointer-events-none absolute inset-y-0 right-0 left-16 top-10 flex items-center justify-center">
+          <p className="rounded-lg bg-white/90 px-4 py-2 text-slate-500">日付を選んでください</p>
+        </div>
+      )}
       {selected && (
         <div data-slot-grid-ui className="fixed inset-x-0 bottom-0 z-30 flex justify-center border-t border-slate-300 bg-white p-3">
           <button
@@ -313,5 +371,5 @@ function rowLabel(row: number) {
 function blockStyle(kind: Block["kind"], selected: boolean) {
   if (kind === "saved") return selected ? "border-slate-800 bg-slate-600 text-white ring-2 ring-slate-300" : "border-slate-400 bg-slate-200 text-slate-600";
   if (kind === "preview") return "border-dashed border-accent bg-accent-soft/80 text-accent-soft-ink";
-  return selected ? "border-accent-strong bg-accent-strong text-on-accent ring-2 ring-own-line" : "border-accent bg-accent text-on-accent";
+  return selected ? "border-accent-strong bg-accent-strong text-on-accent ring-2 ring-own-line" : "border-accent-strong bg-accent/60 text-on-accent";
 }

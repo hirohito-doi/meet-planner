@@ -38,7 +38,7 @@ test("日程調整を作成し、回答して、確定できる", async ({ page 
   }
   await expect(page.getByText("13:00-13:30", { exact: true })).toBeVisible();
 
-  await page.getByRole("button", { name: "日程調整を作る" }).click();
+  await page.getByRole("button", { name: "この内容で作成する" }).click();
   await expect(page.getByText("日程調整を作りました。")).toBeVisible();
   const responseLink = await page.getByRole("textbox").first().inputValue();
   const adminLink = page.url();

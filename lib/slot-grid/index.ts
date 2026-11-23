@@ -57,3 +57,18 @@ export function columnsBetween(dates: readonly string[], from: string, to: strin
   const [i, j] = [dates.indexOf(from), dates.indexOf(to)].sort((x, y) => x - y);
   return dates.slice(i, j + 1);
 }
+
+/**
+ * 選んだ候補の上端(start)か下端(end)を、row のマスまで動かした結果。
+ * 上端はそのマスの始まり、下端はそのマスの終わりに合わせる。30分より短くはならず、その列の範囲(前日 18:00〜翌日 6:00)に収める
+ */
+export function resizeSlot(date: string, slot: TimeRange, edge: "start" | "end", row: number): TimeRange {
+  const first = rowStart(date, 0);
+  const last = rowStart(date, ROWS);
+  if (edge === "start") {
+    const start = Math.min(Math.max(rowStart(date, row), first), slot.end - STEP);
+    return { start, end: slot.end };
+  }
+  const end = Math.max(Math.min(rowStart(date, row + 1), last), slot.start + STEP);
+  return { start: slot.start, end };
+}

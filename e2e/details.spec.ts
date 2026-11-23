@@ -149,3 +149,48 @@ test("存在しない日程調整や、正しくない管理用リンクを開�
   await expect(page.getByRole("heading", { name: "ページが見つかりません" })).toBeVisible();
   await expect(page.getByText("忘年会")).toHaveCount(0);
 });
+
+test("日付を選ぶ前は、表の真ん中に「日付を選んでください」と出す", async ({ page }) => {
+  await page.goto("/new");
+  const message = page.getByText("日付を選んでください");
+  await expect(message).toBeVisible();
+  const box = (await message.boundingBox())!;
+  // 表の枠(スクロールする部分)。時刻の目盛り(左 64px)と見出しの行(上 40px)を除いた範囲の中心に置く
+  const grid = (await page.locator(".overflow-auto", { has: page.getByText("8:00", { exact: true }) }).boundingBox())!;
+  const center = { x: grid.x + 64 + (grid.width - 64) / 2, y: grid.y + 40 + (grid.height - 40) / 2 };
+  expect(Math.abs(box.x + box.width / 2 - center.x)).toBeLessThan(4);
+  expect(Math.abs(box.y + box.height / 2 - center.y)).toBeLessThan(4);
+});
+
+test("選んだ新しい候補は、上下のつまみをドラッグして伸び縮みできる", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === "mobile", "マウスのドラッグで確かめる");
+  await openNextMonth(page);
+  await page.getByRole("button", { name: "2026-12-03" }).click();
+  await scrollGridIntoView(page);
+  // 10:00-12:00 を作って選ぶ
+  const from = await cellPoint(page, 32);
+  const to = await cellPoint(page, 35);
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(to.x, to.y, { steps: 5 });
+  await page.mouse.up();
+  await page.mouse.click(from.x, from.y);
+  await expect(page.getByRole("button", { name: "この候補を削除" })).toBeVisible();
+
+  const drag = async (handle: string, row: number) => {
+    const box = (await page.locator(`[data-resize-handle="${handle}"]`).boundingBox())!;
+    const target = await cellPoint(page, row);
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(target.x, target.y, { steps: 5 });
+    await page.mouse.up();
+  };
+  // 下端を 13:00 のマスへ → 10:00-13:30、上端を 9:00 のマスへ → 9:00-13:30
+  await drag("end", 38);
+  await expect(page.getByRole("button", { name: "12/3(木) 10:00-13:30を外す" })).toBeVisible();
+  await drag("start", 30);
+  await expect(page.getByRole("button", { name: "12/3(木) 9:00-13:30を外す" })).toBeVisible();
+  // 伸び縮みは新しい候補を作らず、選んだままにする
+  await expect(page.getByText("候補 1 件")).toBeVisible();
+  await expect(page.getByRole("button", { name: "この候補を削除" })).toBeVisible();
+});
