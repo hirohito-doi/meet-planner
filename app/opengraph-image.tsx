@@ -1,8 +1,9 @@
 // リンクを LINE や Slack などに貼ったときのプレビュー画像。すべてのページで使う。
-// 日本語の書体を同梱しないため、画像には英字と ○△× の図形だけを描く(タイトルはプレビューの文字で出る)
+// 日本語の書体を同梱しないため、画像には ○△× の図形だけを描く(サービス名とタイトルはプレビューの文字で出る)
 import { ImageResponse } from "next/og";
+import { SITE_NAME } from "./_lib/site";
 
-export const alt = "meet-planner";
+export const alt = SITE_NAME;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -23,19 +24,17 @@ export default function Image() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          gap: 56,
-          background: "#fffbf6",
+                    background: "#fffbf6",
           borderTop: "24px solid #f4a261",
         }}
       >
-        <div style={{ display: "flex", gap: 48 }}>
+        <div style={{ display: "flex", gap: 72 }}>
           {MARKS.map((m) => (
-            <svg key={m.color} width="120" height="120" viewBox="0 0 80 80">
+            <svg key={m.color} width="200" height="200" viewBox="0 0 80 80">
               {m.shape}
             </svg>
           ))}
         </div>
-        <div style={{ fontSize: 88, fontWeight: 700, color: "#6b3410" }}>meet-planner</div>
       </div>
     ),
     size,

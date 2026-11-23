@@ -126,15 +126,16 @@ test("回答画面のリンクのプレビューには日程調整のタイト�
   const { responseLink, adminLink } = await createPollWithOneSlot(page, testInfo.project.name === "mobile");
 
   await page.goto(responseLink);
-  await expect(page).toHaveTitle("忘年会 | meet-planner");
+  await expect(page).toHaveTitle("忘年会 | ○△× 日程調整");
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", "忘年会");
   await expect(page.locator('meta[property="og:image"]')).toHaveCount(1);
+  await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute("content", "○△× 日程調整");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex, nofollow");
   await expect(page.locator('meta[name="referrer"]')).toHaveAttribute("content", "no-referrer");
 
   // 管理画面のタイトルには、日程調整のタイトルを出さない
   await page.goto(adminLink);
-  await expect(page).toHaveTitle("管理画面 | meet-planner");
+  await expect(page).toHaveTitle("管理画面 | ○△× 日程調整");
 });
 
 test("存在しない日程調整や、正しくない管理用リンクを開くと、見つからないと案内する", async ({ page }, testInfo) => {
