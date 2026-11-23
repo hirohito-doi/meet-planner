@@ -266,7 +266,7 @@ export function SlotGrid({
                           left: `calc(${lane} * ${width})`,
                           width,
                         }}
-                        className={`absolute overflow-hidden rounded border px-1 text-[10px] leading-tight ${
+                        className={`absolute overflow-hidden rounded border px-1 text-xs leading-tight ${
                           slot.kind !== "preview" && isSelectable(slot.key) ? "cursor-pointer" : "cursor-default"
                         } ${blockStyle(
                           slot.kind,
