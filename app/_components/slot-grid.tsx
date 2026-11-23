@@ -190,7 +190,7 @@ export function SlotGrid({
   const rowOf = (date: string, time: number) => (time - jstMidnight(date) + 6 * 60 * 60 * 1000) / (30 * 60 * 1000);
 
   return (
-    <div ref={rootRef} className="select-none">
+    <div ref={rootRef} className="relative select-none">
       <div ref={scrollRef} className="relative max-h-[60vh] overflow-auto rounded border border-slate-300 bg-white">
         <div className="flex min-w-full">
           {/* 時刻の目盛り */}
@@ -205,9 +205,7 @@ export function SlotGrid({
           {/* 日付がまだないときも、時刻の目盛りと空の列を出しておく */}
           {dates.length === 0 && (
             <div className="flex-1 border-l border-slate-300">
-              <div className="sticky top-0 z-10 flex h-10 items-center justify-center border-b border-slate-300 bg-white text-sm text-slate-400">
-                日付を選んでください
-              </div>
+              <div className="sticky top-0 z-10 h-10 border-b border-slate-300 bg-white" />
               <div style={{ height: ROWS * ROW_HEIGHT }} />
             </div>
           )}
@@ -283,6 +281,12 @@ export function SlotGrid({
           ))}
         </div>
       </div>
+      {/* 日付がないときの案内。スクロールしても動かないよう、表の枠の上に重ねて、時刻の目盛り(w-16)と見出しの行(h-10)を除いた範囲の真ん中に置く */}
+      {dates.length === 0 && (
+        <div className="pointer-events-none absolute inset-y-0 right-0 left-16 top-10 flex items-center justify-center">
+          <p className="rounded-lg bg-white/90 px-4 py-2 text-slate-500">日付を選んでください</p>
+        </div>
+      )}
       {selected && (
         <div data-slot-grid-ui className="fixed inset-x-0 bottom-0 z-30 flex justify-center border-t border-slate-300 bg-white p-3">
           <button

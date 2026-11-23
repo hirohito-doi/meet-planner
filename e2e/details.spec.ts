@@ -149,3 +149,15 @@ test("存在しない日程調整や、正しくない管理用リンクを開�
   await expect(page.getByRole("heading", { name: "ページが見つかりません" })).toBeVisible();
   await expect(page.getByText("忘年会")).toHaveCount(0);
 });
+
+test("日付を選ぶ前は、表の真ん中に「日付を選んでください」と出す", async ({ page }) => {
+  await page.goto("/new");
+  const message = page.getByText("日付を選んでください");
+  await expect(message).toBeVisible();
+  const box = (await message.boundingBox())!;
+  // 表の枠(スクロールする部分)。時刻の目盛り(左 64px)と見出しの行(上 40px)を除いた範囲の中心に置く
+  const grid = (await page.locator(".overflow-auto", { has: page.getByText("8:00", { exact: true }) }).boundingBox())!;
+  const center = { x: grid.x + 64 + (grid.width - 64) / 2, y: grid.y + 40 + (grid.height - 40) / 2 };
+  expect(Math.abs(box.x + box.width / 2 - center.x)).toBeLessThan(4);
+  expect(Math.abs(box.y + box.height / 2 - center.y)).toBeLessThan(4);
+});
