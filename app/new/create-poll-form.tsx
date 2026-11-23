@@ -110,6 +110,7 @@ export function CreatePollForm() {
             drafts={drafts}
             onCreate={slots.addSlot}
             onDelete={slots.removeSlot}
+            onResize={slots.resizeSlot}
             onRemoveDate={slots.removeDate}
           />
         </div>

@@ -161,3 +161,36 @@ test("日付を選ぶ前は、表の真ん中に「日付を選んでくださ�
   expect(Math.abs(box.x + box.width / 2 - center.x)).toBeLessThan(4);
   expect(Math.abs(box.y + box.height / 2 - center.y)).toBeLessThan(4);
 });
+
+test("選んだ新しい候補は、上下のつまみをドラッグして伸び縮みできる", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === "mobile", "マウスのドラッグで確かめる");
+  await openNextMonth(page);
+  await page.getByRole("button", { name: "2026-12-03" }).click();
+  await scrollGridIntoView(page);
+  // 10:00-12:00 を作って選ぶ
+  const from = await cellPoint(page, 32);
+  const to = await cellPoint(page, 35);
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(to.x, to.y, { steps: 5 });
+  await page.mouse.up();
+  await page.mouse.click(from.x, from.y);
+  await expect(page.getByRole("button", { name: "この候補を削除" })).toBeVisible();
+
+  const drag = async (handle: string, row: number) => {
+    const box = (await page.locator(`[data-resize-handle="${handle}"]`).boundingBox())!;
+    const target = await cellPoint(page, row);
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(target.x, target.y, { steps: 5 });
+    await page.mouse.up();
+  };
+  // 下端を 13:00 のマスへ → 10:00-13:30、上端を 9:00 のマスへ → 9:00-13:30
+  await drag("end", 38);
+  await expect(page.getByRole("button", { name: "12/3(木) 10:00-13:30を外す" })).toBeVisible();
+  await drag("start", 30);
+  await expect(page.getByRole("button", { name: "12/3(木) 9:00-13:30を外す" })).toBeVisible();
+  // 伸び縮みは新しい候補を作らず、選んだままにする
+  await expect(page.getByText("候補 1 件")).toBeVisible();
+  await expect(page.getByRole("button", { name: "この候補を削除" })).toBeVisible();
+});

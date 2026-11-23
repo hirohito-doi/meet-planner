@@ -3,7 +3,7 @@
 // 候補を作る表。docs/spec.md「候補の作成」「表のレイアウト」
 import { useEffect, useRef, useState } from "react";
 import { formatClockInColumn, formatDay, jstDate, jstMidnight } from "@/lib/jst";
-import { columnsBetween, layout, ROWS, slotFromRows } from "@/lib/slot-grid";
+import { columnsBetween, layout, resizeSlot, ROWS, slotFromRows } from "@/lib/slot-grid";
 
 /** 画面の中だけにある、まだ保存していない候補。作った列(date)を覚えておく */
 export type DraftSlot = { key: string; date: string; start: number; end: number };
@@ -20,6 +20,8 @@ type Block = { key: string; start: number; end: number; kind: "draft" | "saved" 
 /** date は始めた列、to は今いる列。横に動かすと、その間の列すべてに同じ時刻の候補を作る */
 type Drag = { date: string; to: string; a: number; b: number; moved: boolean; blockKey: string | null };
 type TapStart = { date: string; row: number; blockKey: string | null; x: number; y: number };
+/** 選んだ候補の上端か下端のつまみをドラッグしている間の状態 */
+type Resize = { key: string; date: string; edge: "start" | "end" };
 
 export function SlotGrid({
   dates,
@@ -27,6 +29,7 @@ export function SlotGrid({
   saved = [],
   onCreate,
   onDelete,
+  onResize,
   onRemoveDate,
   fixedDates = [],
   onDeleteSaved,
@@ -37,6 +40,8 @@ export function SlotGrid({
   saved?: SavedSlot[];
   onCreate: (slot: Omit<DraftSlot, "key">) => void;
   onDelete: (key: string) => void;
+  /** 選んだ新しい候補の時刻を、上下のつまみで変える。ないときはつまみを出さない */
+  onResize?: (key: string, range: { start: number; end: number }) => void;
   onRemoveDate?: (date: string) => void;
   /** 保存済みの候補がある日付。この列は外せない */
   fixedDates?: string[];
@@ -49,6 +54,7 @@ export function SlotGrid({
   const scrollRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<Drag | null>(null);
   const touchRef = useRef<TapStart | null>(null);
+  const resizeRef = useRef<Resize | null>(null);
   const columnRefs = useRef(new Map<string, HTMLDivElement>());
   const [preview, setPreview] = useState<Drag | null>(null);
   const [pendingStart, setPendingStart] = useState<{ date: string; row: number } | null>(null);
@@ -168,6 +174,31 @@ export function SlotGrid({
     }
   };
 
+  // 上下のつまみ: 選んだ新しい候補の開始・終了を、つまみを動かした先のマスに合わせる(PC もスマホも同じ)。
+  // 表のほかの操作(候補の作成、選択の解除)に伝えないよう、イベントはここで止める
+  // どの候補のどちらの端かは、つまみの data-* 属性から読む
+  const startResize = (e: React.PointerEvent<HTMLElement>) => {
+    e.stopPropagation();
+    const { resizeHandle, resizeKey, resizeDate } = e.currentTarget.dataset;
+    if (!resizeKey || !resizeDate || (resizeHandle !== "start" && resizeHandle !== "end")) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    resizeRef.current = { key: resizeKey, date: resizeDate, edge: resizeHandle };
+  };
+  const moveResize = (e: React.PointerEvent<HTMLElement>) => {
+    e.stopPropagation();
+    const resize = resizeRef.current;
+    const draft = resize && drafts.find((d) => d.key === resize.key);
+    const column = resize && columnRefs.current.get(resize.date);
+    if (!resize || !draft || !column) return;
+    const row = Math.floor((e.clientY - column.getBoundingClientRect().top) / ROW_HEIGHT);
+    const next = resizeSlot(resize.date, draft, resize.edge, row);
+    if (next.start !== draft.start || next.end !== draft.end) onResize?.(resize.key, next);
+  };
+  const endResize = (e: React.PointerEvent<HTMLElement>) => {
+    e.stopPropagation();
+    resizeRef.current = null;
+  };
+
   const isDraft = (key: string) => drafts.some((d) => d.key === key);
   const isSelectable = (key: string) => isDraft(key) || (!!onDeleteSaved && saved.some((s) => s.id === key));
 
@@ -265,6 +296,8 @@ export function SlotGrid({
                           width,
                         }}
                         className={`absolute overflow-hidden rounded border px-1 text-xs leading-tight ${
+                          onResize && slot.kind === "draft" && selected === slot.key ? "pt-3" : ""
+                        } ${
                           slot.kind !== "preview" && isSelectable(slot.key) ? "cursor-pointer" : "cursor-default"
                         } ${blockStyle(
                           slot.kind,
@@ -272,6 +305,27 @@ export function SlotGrid({
                         )}`}
                       >
                         {formatClockInColumn(date, slot.start)}-{formatClockInColumn(date, slot.end, { isEnd: true })}
+                        {onResize &&
+                          slot.kind === "draft" &&
+                          selected === slot.key &&
+                          (["start", "end"] as const).map((edge) => (
+                            <span
+                              key={edge}
+                              data-resize-handle={edge}
+                              data-resize-key={slot.key}
+                              data-resize-date={date}
+                              aria-hidden
+                              className={`absolute inset-x-0 flex h-3 cursor-ns-resize touch-none justify-center ${
+                                edge === "start" ? "top-0 items-start" : "bottom-0 items-end"
+                              }`}
+                              onPointerDown={startResize}
+                              onPointerMove={moveResize}
+                              onPointerUp={endResize}
+                              onPointerCancel={endResize}
+                            >
+                              <span className="my-0.5 h-1 w-6 rounded-full bg-on-accent/70" />
+                            </span>
+                          ))}
                       </div>
                     );
                   })}

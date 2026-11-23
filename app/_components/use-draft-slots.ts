@@ -24,6 +24,9 @@ export function useDraftSlots(initialDates: string[] = []) {
     toggleDate: (date: string) => (dates.includes(date) ? removeDate(date) : addDate(date)),
     addSlot: (slot: Omit<DraftSlot, "key">) => setDrafts((current) => [...current, { ...slot, key: crypto.randomUUID() }]),
     removeSlot: (key: string) => setDrafts((current) => current.filter((d) => d.key !== key)),
+    /** 上下のつまみで伸び縮みさせた候補の時刻を変える(作った列はそのまま) */
+    resizeSlot: (key: string, range: { start: number; end: number }) =>
+      setDrafts((current) => current.map((d) => (d.key === key ? { ...d, ...range } : d))),
     clearSlots: () => setDrafts([]),
   };
 }

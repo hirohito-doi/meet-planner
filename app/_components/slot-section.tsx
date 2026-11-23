@@ -14,6 +14,7 @@ export function SlotSection({
   toggleDate,
   addSlot,
   removeSlot,
+  resizeSlot,
   onDeleteSaved,
   canCreate = true,
 }: ReturnType<typeof useDraftSlots> &
@@ -40,6 +41,7 @@ export function SlotSection({
         saved={saved}
         onCreate={addSlot}
         onDelete={removeSlot}
+        onResize={resizeSlot}
         onRemoveDate={removeDate}
         fixedDates={fixedDates}
         onDeleteSaved={onDeleteSaved}
