@@ -191,7 +191,7 @@ export function SlotGrid({
 
   return (
     <div ref={rootRef} className="select-none">
-      <div ref={scrollRef} className="relative max-h-[60vh] overflow-auto rounded border border-slate-300">
+      <div ref={scrollRef} className="relative max-h-[60vh] overflow-auto rounded border border-slate-300 bg-white">
         <div className="flex min-w-full">
           {/* 時刻の目盛り */}
           <div className="sticky left-0 z-20 w-12 shrink-0 bg-white">
@@ -312,6 +312,6 @@ function rowLabel(row: number) {
 
 function blockStyle(kind: Block["kind"], selected: boolean) {
   if (kind === "saved") return selected ? "border-slate-800 bg-slate-600 text-white ring-2 ring-slate-300" : "border-slate-400 bg-slate-200 text-slate-600";
-  if (kind === "preview") return "border-dashed border-slate-500 bg-slate-200/70 text-slate-900";
-  return selected ? "border-slate-950 bg-slate-950 text-white ring-2 ring-slate-400" : "border-slate-700 bg-slate-700 text-white";
+  if (kind === "preview") return "border-dashed border-accent bg-accent-soft/80 text-accent-soft-ink";
+  return selected ? "border-accent-strong bg-accent-strong text-on-accent ring-2 ring-own-line" : "border-accent bg-accent text-on-accent";
 }

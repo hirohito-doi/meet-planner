@@ -4,12 +4,12 @@ import Link from "next/link";
 /** 全画面の上に出す帯 */
 export function AppHeader({ label }: { label?: string }) {
   return (
-    <header className="border-b border-slate-200 bg-white">
+    <header className="border-b border-line bg-header">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-        <Link href="/" className="font-bold text-slate-900">
+        <Link href="/" className="font-bold text-header-ink">
           meet-planner
         </Link>
-        {label && <span className="text-sm text-slate-500">{label}</span>}
+        {label && <span className="text-sm text-header-ink opacity-70">{label}</span>}
       </div>
     </header>
   );
@@ -45,7 +45,7 @@ export function Section({ title, children, aside }: { title: string; children: R
   return (
     <section className="space-y-3">
       <div className="flex items-baseline justify-between gap-2">
-        <h2 className="text-xs font-bold tracking-wider text-slate-500">{title}</h2>
+        <h2 className="text-xs font-bold tracking-wider text-accent-soft-ink">{title}</h2>
         {aside}
       </div>
       {children}
@@ -56,7 +56,7 @@ export function Section({ title, children, aside }: { title: string; children: R
 type ButtonKind = "primary" | "secondary" | "danger";
 
 const BUTTON: Record<ButtonKind, string> = {
-  primary: "bg-slate-900 text-white shadow-sm hover:bg-slate-700",
+  primary: "bg-accent text-on-accent shadow-sm hover:bg-accent-strong",
   secondary: "border border-slate-300 bg-white text-slate-800 hover:bg-slate-50",
   danger: "border border-red-200 bg-white text-red-700 hover:bg-red-50",
 };
