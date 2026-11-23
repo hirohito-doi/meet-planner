@@ -36,9 +36,9 @@ export default function Home() {
           <h2 id="steps" className="text-center text-xl font-bold text-accent-soft-ink">
             使い方
           </h2>
-          <ol className="mt-6 grid gap-4 sm:grid-cols-3">
+          <ol className="mt-6 grid divide-y divide-line rounded-xl border border-line bg-white sm:grid-cols-3 sm:divide-x sm:divide-y-0">
             {STEPS.map((step, i) => (
-              <li key={step.title} className="rounded-xl border border-line bg-white p-5">
+              <li key={step.title} className="p-6">
                 <span className="flex size-8 items-center justify-center rounded-full bg-accent font-bold text-on-accent">{i + 1}</span>
                 <h3 className="mt-3 font-bold">{step.title}</h3>
                 <p className="mt-1 text-sm text-slate-600">{step.body}</p>
@@ -51,9 +51,9 @@ export default function Home() {
           <h2 id="features" className="text-center text-xl font-bold text-accent-soft-ink">
             特徴
           </h2>
-          <ul className="mt-6 grid gap-4 sm:grid-cols-3">
+          <ul className="mt-6 grid divide-y divide-line rounded-xl bg-accent-soft sm:grid-cols-3 sm:divide-x sm:divide-y-0">
             {FEATURES.map((feature) => (
-              <li key={feature.title} className="rounded-xl bg-accent-soft p-5">
+              <li key={feature.title} className="p-6">
                 <h3 className="font-bold text-accent-soft-ink">{feature.title}</h3>
                 <p className="mt-1 text-sm text-slate-700">{feature.body}</p>
               </li>
