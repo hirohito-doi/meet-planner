@@ -49,13 +49,10 @@ export default function Home() {
           </ol>
         </section>
 
-        <section aria-labelledby="features" className="mt-16">
-          <h2 id="features" className="text-center text-xl font-bold text-accent-soft-ink">
-            特徴
-          </h2>
-          <ul className="mt-6 grid divide-y divide-line rounded-xl bg-accent-soft sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+        <section aria-label="特徴" className="mt-12">
+          <ul className="mx-auto flex max-w-2xl flex-col gap-5 rounded-xl bg-accent-soft p-6 sm:p-8">
             {FEATURES.map((feature) => (
-              <li key={feature.title} className="p-6">
+              <li key={feature.title}>
                 <h3 className="font-bold text-accent-soft-ink">{feature.title}</h3>
                 <p className="mt-1 text-sm text-slate-700">{feature.body}</p>
               </li>
