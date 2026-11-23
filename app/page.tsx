@@ -36,12 +36,14 @@ export default function Home() {
           <h2 id="steps" className="text-center text-xl font-bold text-accent-soft-ink">
             使い方
           </h2>
-          <ol className="mt-6 grid divide-y divide-line rounded-xl border border-line bg-white sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          <ol className="mx-auto mt-6 flex max-w-2xl flex-col gap-6 rounded-xl border border-line bg-white p-6 sm:p-8">
             {STEPS.map((step, i) => (
-              <li key={step.title} className="p-6">
-                <span className="flex size-8 items-center justify-center rounded-full bg-accent font-bold text-on-accent">{i + 1}</span>
-                <h3 className="mt-3 font-bold">{step.title}</h3>
-                <p className="mt-1 text-sm text-slate-600">{step.body}</p>
+              <li key={step.title} className="flex gap-4">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent font-bold text-on-accent">{i + 1}</span>
+                <div>
+                  <h3 className="font-bold leading-8">{step.title}</h3>
+                  <p className="text-sm text-slate-600">{step.body}</p>
+                </div>
               </li>
             ))}
           </ol>
