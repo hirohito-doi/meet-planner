@@ -3,12 +3,13 @@
 // 管理画面。docs/spec.md「確定」「管理画面」
 import Link from "next/link";
 import { useState, useSyncExternalStore, useTransition } from "react";
+import { AVAILABILITIES, MARK_COLOR, SYMBOL } from "@/app/_components/availability";
 import { SlotSection } from "@/app/_components/slot-section";
 import { Button, ErrorMessage, inputClass, Section, TwoColumns } from "@/app/_components/ui";
 import { useDraftSlots } from "@/app/_components/use-draft-slots";
 import { formatSlot, jstDate } from "@/lib/jst";
 import type { ActionResult } from "@/app/_lib/action-result";
-import type { Availability, PollView } from "@/server/poll";
+import type { PollView } from "@/server/poll";
 import {
   addSlotsAction,
   deletePollAction,
@@ -32,8 +33,6 @@ export function AdminPanel({ poll, token, created }: { poll: PollView; token: st
     });
 
   const slotById = new Map(poll.slots.map((s) => [s.id, s]));
-  const countOf = (slotId: string, value: Availability) =>
-    poll.responses.filter((r) => r.availabilities[slotId] === value).length;
 
   return (
     <TwoColumns
@@ -110,7 +109,7 @@ export function AdminPanel({ poll, token, created }: { poll: PollView; token: st
           <p className="text-sm text-slate-500">候補がありません。</p>
         ) : (
           <ul className="divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-200 bg-white">
-            {poll.ranking.map(({ slotId, score }) => {
+            {poll.ranking.map(({ slotId, score, counts }) => {
               const slot = slotById.get(slotId)!;
               const isFinalized = slotId === poll.finalizedSlotId;
               return (
@@ -123,9 +122,12 @@ export function AdminPanel({ poll, token, created }: { poll: PollView; token: st
                   </span>
                   <span className="flex items-center gap-3 text-sm text-slate-600">
                     <span className="font-bold text-slate-900">スコア {score}</span>
-                    <span className="text-emerald-600">○{countOf(slotId, "yes")}</span>
-                    <span className="text-amber-500">△{countOf(slotId, "maybe")}</span>
-                    <span className="text-rose-500">×{countOf(slotId, "no")}</span>
+                    {AVAILABILITIES.map((value) => (
+                      <span key={value} className={MARK_COLOR[value]}>
+                        {SYMBOL[value]}
+                        {counts[value]}
+                      </span>
+                    ))}
                   </span>
                   <span className="ml-auto flex gap-2">
                     {isFinalized ? (

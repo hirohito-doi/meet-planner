@@ -100,7 +100,7 @@ describe("可否の保存", () => {
     expect((await readPoll(db, pollId))?.responses).toMatchObject([{ availabilities: { [dec3]: "maybe" } }]);
   });
 
-  test("可否を空欄に戻すと、未回答になる", async () => {
+  test("可否を消すと、未回答に戻る", async () => {
     const { db, pollId, dec3, dec4 } = await setup();
     const { editToken } = await join(db, pollId, { name: "田中" });
     const me = await openResponse(db, pollId, editToken);
@@ -123,7 +123,7 @@ describe("可否の保存の検証", () => {
     await expect(me!.setAvailability("other-poll-slot", "yes")).rejects.toMatchObject({ code: "INVALID_INPUT" });
   });
 
-  test("可否が ○△× (yes / maybe / no) と空欄 (null) 以外なら保存できない", async () => {
+  test("可否が ○△× (yes / maybe / no) と未回答 (null) 以外なら保存できない", async () => {
     const { db, pollId, dec3 } = await setup();
     const { editToken } = await join(db, pollId, { name: "田中" });
     const me = await openResponse(db, pollId, editToken);
@@ -222,8 +222,8 @@ describe("スコアと順位", () => {
     await suzuki!.setAvailability(dec4, "maybe");
 
     expect((await readPoll(db, pollId))!.ranking).toEqual([
-      { slotId: dec4, score: 3 },
-      { slotId: dec3, score: 1 },
+      { slotId: dec4, score: 3, counts: { yes: 1, maybe: 1, no: 0 } },
+      { slotId: dec3, score: 1, counts: { yes: 0, maybe: 1, no: 1 } },
     ]);
   });
 });

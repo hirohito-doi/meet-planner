@@ -4,7 +4,7 @@ import { rankSlots } from "./ranking";
 const at = (iso: string) => new Date(iso).getTime();
 
 describe("rankSlots", () => {
-  test("スコアは可否を ○=2、△=1、×=0 として合計した値になる", () => {
+  test("スコアは可否を ○=2、△=1、×=0 として合計した値になる。○△× の件数も返す", () => {
     const slots = [{ id: "a", start: at("2026-12-03T19:00:00+09:00") }];
     const responses = [
       { availabilities: { a: "yes" } },
@@ -12,7 +12,7 @@ describe("rankSlots", () => {
       { availabilities: { a: "no" } },
     ] as const;
 
-    expect(rankSlots(slots, responses)).toEqual([{ slotId: "a", score: 3 }]);
+    expect(rankSlots(slots, responses)).toEqual([{ slotId: "a", score: 3, counts: { yes: 1, maybe: 1, no: 1 } }]);
   });
 
   test("候補はスコアの高い順に並ぶ", () => {
@@ -62,8 +62,8 @@ describe("rankSlots", () => {
     ] as const;
 
     expect(rankSlots(slots, responses)).toEqual([
-      { slotId: "unanswered", score: 2 },
-      { slotId: "answeredNo", score: 2 },
+      { slotId: "unanswered", score: 2, counts: { yes: 1, maybe: 0, no: 0 } },
+      { slotId: "answeredNo", score: 2, counts: { yes: 1, maybe: 0, no: 1 } },
     ]);
   });
 });
