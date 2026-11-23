@@ -194,3 +194,36 @@ test("選んだ新しい候補は、上下のつまみをドラッグして伸�
   await expect(page.getByText("候補 1 件")).toBeVisible();
   await expect(page.getByRole("button", { name: "この候補を削除" })).toBeVisible();
 });
+
+test("30分の候補を選んでも、時刻の文字が欠けずに見える", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === "mobile", "マウスで確かめる");
+  await openNextMonth(page);
+  await page.getByRole("button", { name: "2026-12-03" }).click();
+  await scrollGridIntoView(page);
+  // 10:00-10:30 を作って選ぶ
+  const cell = await cellPoint(page, 32);
+  await page.mouse.click(cell.x, cell.y);
+  await expect(page.getByRole("button", { name: "12/3(木) 10:00-10:30を外す" })).toBeVisible();
+  await page.mouse.click(cell.x, cell.y);
+  await expect(page.getByRole("button", { name: "この候補を削除" })).toBeVisible();
+
+  const block = page.locator("[data-block-key]");
+  await expect(block).toHaveCount(1);
+  // 時刻の文字が候補の枠の内側に収まり、つまみと重なっていない
+  const { text, frame, handles } = await block.evaluate((el) => {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    const node = walker.nextNode()!;
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const pick = (r: DOMRect) => ({ top: r.top, bottom: r.bottom });
+    return {
+      text: pick(range.getBoundingClientRect()),
+      frame: pick(el.getBoundingClientRect()),
+      handles: [...el.querySelectorAll("[data-resize-handle] > span")].map((h) => pick(h.getBoundingClientRect())),
+    };
+  });
+  expect(text.top).toBeGreaterThanOrEqual(frame.top - 0.5);
+  expect(text.bottom).toBeLessThanOrEqual(frame.bottom + 0.5);
+  expect(handles).toHaveLength(2);
+  for (const h of handles) expect(h.bottom <= text.top + 0.5 || h.top >= text.bottom - 0.5).toBe(true);
+});

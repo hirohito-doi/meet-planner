@@ -295,8 +295,8 @@ export function SlotGrid({
                           left: `calc(${lane} * ${width})`,
                           width,
                         }}
-                        className={`absolute overflow-hidden rounded border px-1 text-xs leading-tight ${
-                          onResize && slot.kind === "draft" && selected === slot.key ? "pt-3" : ""
+                        className={`absolute rounded border px-1 text-xs leading-tight ${
+                          selected === slot.key ? "z-[5]" : ""
                         } ${
                           slot.kind !== "preview" && isSelectable(slot.key) ? "cursor-pointer" : "cursor-default"
                         } ${blockStyle(
@@ -304,7 +304,10 @@ export function SlotGrid({
                           selected === slot.key,
                         )}`}
                       >
-                        {formatClockInColumn(date, slot.start)}-{formatClockInColumn(date, slot.end, { isEnd: true })}
+                        <span className="block h-full overflow-hidden">
+                          {formatClockInColumn(date, slot.start)}-{formatClockInColumn(date, slot.end, { isEnd: true })}
+                        </span>
+                        {/* つまみは枠の外に出し、短い候補でも時刻の文字と重ならないようにする */}
                         {onResize &&
                           slot.kind === "draft" &&
                           selected === slot.key &&
@@ -315,15 +318,15 @@ export function SlotGrid({
                               data-resize-key={slot.key}
                               data-resize-date={date}
                               aria-hidden
-                              className={`absolute inset-x-0 flex h-3 cursor-ns-resize touch-none justify-center ${
-                                edge === "start" ? "top-0 items-start" : "bottom-0 items-end"
+                              className={`absolute inset-x-0 flex h-4 cursor-ns-resize touch-none justify-center ${
+                                edge === "start" ? "-top-2.5 items-start" : "-bottom-2.5 items-end"
                               }`}
                               onPointerDown={startResize}
                               onPointerMove={moveResize}
                               onPointerUp={endResize}
                               onPointerCancel={endResize}
                             >
-                              <span className="my-0.5 h-1 w-6 rounded-full bg-on-accent/70" />
+                              <span className="h-1.5 w-8 rounded-full border border-accent-strong bg-white" />
                             </span>
                           ))}
                       </div>
