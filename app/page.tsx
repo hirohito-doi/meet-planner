@@ -23,13 +23,10 @@ export default function Home() {
           <div className="flex gap-2">
             <Marks className="size-10" />
           </div>
-          <h1 className="text-3xl font-bold leading-snug text-accent-soft-ink sm:text-4xl">
-            みんなの都合を集めて、
-            <br />
-            日時を決める
-          </h1>
-          <p className="max-w-xl text-slate-600">
-            候補の日時を作ってリンクを送るだけ。集まった ○△× から、みんなの都合に合う日時が見つかります。
+          {/* 文節の切れ目で改行し、行の長さをそろえる(1文字だけ次の行に落ちないように) */}
+          <h1 className="text-2xl font-bold leading-snug text-balance text-accent-soft-ink [word-break:auto-phrase] sm:text-4xl">リンクを送って、○△× で答えてもらうだけ</h1>
+          <p className="max-w-xl text-balance text-slate-600 [word-break:auto-phrase]">
+            集まった ○△× から、みんなの都合に合う日時が見つかります。
           </p>
           <CreateLink />
         </section>
