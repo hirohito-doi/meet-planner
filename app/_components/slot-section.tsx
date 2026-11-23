@@ -45,7 +45,7 @@ export function SlotSection({
         onDeleteSaved={onDeleteSaved}
         canCreate={canCreate}
       />
-      {canCreate && <p className="text-xs text-slate-500">新しい候補: {drafts.length}件</p>}
+      {canCreate && <p className="text-xs text-slate-500">新しい候補 {drafts.length} 件</p>}
     </div>
   );
 }

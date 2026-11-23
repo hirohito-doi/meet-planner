@@ -1,15 +1,19 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { AppHeader } from "@/app/_components/ui";
+import { AppHeader, Loading } from "@/app/_components/ui";
 import { getDb } from "@/server/db/app-db";
 import { openAdmin, readPoll } from "@/server/poll";
 import { AdminPanel } from "./admin-panel";
+
+// 管理画面のタイトルは出さない(管理用リンクが誤って共有されても、プレビューで中身が分からないように)
+export const metadata: Metadata = { title: "管理画面" };
 
 export default function Page({ params, searchParams }: PageProps<"/p/[pollId]/admin/[token]">) {
   return (
     <>
       <AppHeader label="管理画面" />
-      <Suspense fallback={<p className="px-6 py-8 text-sm text-slate-500">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         {Promise.all([params, searchParams]).then(([{ pollId, token }, { created }]) => (
           <Admin pollId={pollId} token={token} created={created === "1"} />
         ))}
