@@ -103,7 +103,7 @@ export function AdminPanel({ poll, token, created }: { poll: PollView; token: st
       <Section title="候補(スコアの高い順)">
         {finalized && (
           <p className="text-sm text-slate-600">
-            確定中は、回答・候補の追加・タイトルと説明を変更できません。変更するには、確定を取り消してください。候補の削除はできます。
+            確定している間は、回答、候補の追加、タイトルと説明の変更ができません。変えるときは確定を取り消してください。候補の削除はできます。
           </p>
         )}
         {poll.ranking.length === 0 ? (
@@ -175,11 +175,11 @@ function Links({ pollId, token, created }: { pollId: string; token: string; crea
   );
   return (
     <section className={`space-y-3 rounded-lg border p-4 ${created ? "border-amber-400 bg-amber-50" : "border-slate-200 bg-white"}`}>
-      {created && <p className="font-bold text-slate-900">日程調整を作成しました。</p>}
-      <CopyField label="回答用リンク(回答者に共有します)" value={`${origin}/p/${pollId}`} />
+      {created && <p className="font-bold text-slate-900">日程調整を作りました。</p>}
+      <CopyField label="回答用リンク(回答してほしい人に送ります)" value={`${origin}/p/${pollId}`} />
       <CopyField label="管理用リンク(主催者だけが使います)" value={`${origin}/p/${pollId}/admin/${token}`} />
       <p className="text-xs font-medium text-amber-800">
-        管理用リンクを紛失すると、日程の確定や候補の変更ができなくなり、復旧もできません。必ずブックマークなどで保存してください。
+        管理用リンクをなくすと、日程の確定や候補の変更ができなくなります。再発行もできないので、必ずブックマークなどで保存してください。
       </p>
     </section>
   );

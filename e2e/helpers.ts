@@ -40,7 +40,7 @@ export async function createPollWithOneSlot(page: Page, mobile: boolean) {
     await page.mouse.move(to.x, to.y, { steps: 5 });
     await page.mouse.up();
   }
-  await page.getByRole("button", { name: "日程調整を作成する" }).click();
-  await expect(page.getByText("日程調整を作成しました。")).toBeVisible();
+  await page.getByRole("button", { name: "日程調整を作る" }).click();
+  await expect(page.getByText("日程調整を作りました。")).toBeVisible();
   return { responseLink: await page.getByRole("textbox").first().inputValue(), adminLink: page.url() };
 }

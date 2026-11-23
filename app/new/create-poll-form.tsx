@@ -92,7 +92,7 @@ export function CreatePollForm() {
             {error && <ErrorMessage>{error}</ErrorMessage>}
             <div className="space-y-2">
               <Button type="submit" kind="primary" size="lg" disabled={pending || drafts.length === 0} className="w-full">
-                {pending ? "作成しています…" : "日程調整を作成する"}
+                {pending ? "作っています…" : "日程調整を作る"}
               </Button>
               <p className="text-xs text-slate-500">作ると、回答用のリンクと管理用のリンクができます。</p>
             </div>

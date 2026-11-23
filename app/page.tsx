@@ -29,7 +29,7 @@ export default function Home() {
             日時を決める
           </h1>
           <p className="max-w-xl text-slate-600">
-            候補の日時を作ってリンクを送るだけ。集まった ○△× から、全員に都合のいい日時が見つかります。
+            候補の日時を作ってリンクを送るだけ。集まった ○△× から、みんなの都合に合う日時が見つかります。
           </p>
           <CreateLink />
         </section>
