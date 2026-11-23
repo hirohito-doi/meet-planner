@@ -7,14 +7,21 @@ import type { DraftSlot } from "./slot-grid";
 export function useDraftSlots(initialDates: string[] = []) {
   const [dates, setDates] = useState<string[]>(() => [...initialDates].sort());
   const [drafts, setDrafts] = useState<DraftSlot[]>([]);
+  const addDate = (date: string) => setDates((current) => (current.includes(date) ? current : [...current, date].sort()));
+  /** 列を外す。その列で作った候補があるときは、確かめてから外す */
+  const removeDate = (date: string) => {
+    const count = drafts.filter((d) => d.date === date).length;
+    if (count > 0 && !confirm(`この日付の新しい候補(${count}件)も消えます。外しますか?`)) return;
+    setDates((current) => current.filter((d) => d !== date));
+    setDrafts((current) => current.filter((d) => d.date !== date));
+  };
   return {
     dates,
     drafts,
-    addDate: (date: string) => setDates((current) => (current.includes(date) ? current : [...current, date].sort())),
-    removeDate: (date: string) => {
-      setDates((current) => current.filter((d) => d !== date));
-      setDrafts((current) => current.filter((d) => d.date !== date));
-    },
+    addDate,
+    removeDate,
+    /** カレンダーで日付を押したとき: 列になっていなければ足し、なっていれば外す */
+    toggleDate: (date: string) => (dates.includes(date) ? removeDate(date) : addDate(date)),
     addSlot: (slot: Omit<DraftSlot, "key">) => setDrafts((current) => [...current, { ...slot, key: crypto.randomUUID() }]),
     removeSlot: (key: string) => setDrafts((current) => current.filter((d) => d.key !== key)),
     clearSlots: () => setDrafts([]),

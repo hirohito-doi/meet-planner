@@ -63,13 +63,61 @@ test("スマホで開始を選んだ後は、既存の候補の上をタップ�
   const to = await cellPoint(page, 35);
   await page.touchscreen.tap(from.x, from.y);
   await page.touchscreen.tap(to.x, to.y);
-  await expect(page.getByText("10:00-12:00")).toBeVisible();
+  await expect(page.getByText("10:00-12:00", { exact: true })).toBeVisible();
 
   // 9:00 を開始に選び、10:00-12:00 の候補の上(10:30)を終了としてタップする
   const start = await cellPoint(page, 30);
   const end = await cellPoint(page, 33);
   await page.touchscreen.tap(start.x, start.y);
   await page.touchscreen.tap(end.x, end.y);
-  await expect(page.getByText("9:00-11:00")).toBeVisible();
-  await expect(page.getByText("新しい候補: 2件")).toBeVisible();
+  await expect(page.getByText("9:00-11:00", { exact: true })).toBeVisible();
+  await expect(page.getByText("候補 2 件")).toBeVisible();
+});
+
+test("回答画面では、自分の列が候補の列のすぐ右に来る", async ({ page, browser }, testInfo) => {
+  const { responseLink } = await createPollWithOneSlot(page, testInfo.project.name === "mobile");
+  // 先に別の人が登録する
+  const other = await browser.newContext();
+  const otherPage = await other.newPage();
+  await otherPage.goto(responseLink);
+  await otherPage.getByPlaceholder("名前").fill("佐藤");
+  await otherPage.getByRole("button", { name: "回答を始める" }).click();
+  await expect(otherPage.getByRole("columnheader", { name: "佐藤" })).toBeVisible();
+  await other.close();
+
+  await page.goto(responseLink);
+  await page.getByPlaceholder("名前").fill("田中");
+  await page.getByRole("button", { name: "回答を始める" }).click();
+  await expect(page.getByRole("columnheader").nth(1)).toHaveText("田中");
+  await expect(page.getByRole("columnheader").nth(2)).toHaveText("佐藤");
+});
+
+test("管理画面のカレンダーは、保存済みの候補がある月から始まる", async ({ page }, testInfo) => {
+  // 今日は 2026-11-22、候補は 12/3
+  const { adminLink } = await createPollWithOneSlot(page, testInfo.project.name === "mobile");
+  await page.goto(adminLink);
+  await expect(page.getByText("2026年12月")).toBeVisible();
+});
+
+test("スマホで回答者が多くても、ページは画面の幅に収まり、表の中で横にスクロールする", async ({ page, browser }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "スマホの画面幅で起きること");
+  const { responseLink } = await createPollWithOneSlot(page, true);
+  // ○ を付けた回答者を6人にして、表を画面の幅より広くする
+  for (const name of ["佐藤", "鈴木", "高橋", "伊藤", "渡辺", "山本"]) {
+    const context = await browser.newContext();
+    const other = await context.newPage();
+    await other.goto(responseLink);
+    await other.getByPlaceholder("名前").fill(name);
+    await other.getByRole("button", { name: "回答を始める" }).click();
+    const saved = other.waitForResponse((r) => r.request().method() === "POST" && (r.request().postData() ?? "").includes('"yes"'));
+    await other.getByRole("button", { name: /の可否$/ }).click();
+    await saved;
+    await context.close();
+  }
+
+  await page.goto(responseLink);
+  await expect(page.getByRole("columnheader", { name: "山本" })).toBeAttached();
+  const widths = await page.evaluate(() => ({ viewport: window.innerWidth, page: document.documentElement.scrollWidth }));
+  expect(widths.viewport).toBe(412);
+  expect(widths.page).toBeLessThanOrEqual(widths.viewport);
 });

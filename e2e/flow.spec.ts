@@ -16,23 +16,27 @@ test("日程調整を作成し、回答して、確定できる", async ({ page 
   await scrollGridIntoView(page);
   const from = await cellPoint(page, 32);
   const to = await cellPoint(page, 35);
-  const single = await cellPoint(page, 38);
   if (mobile) {
     // スマホ: 開始マスと終了マスを順にタップ。同じマスを2回タップすると30分の候補
     await page.touchscreen.tap(from.x, from.y);
     await page.touchscreen.tap(to.x, to.y);
-    await page.touchscreen.tap(single.x, single.y);
-    await page.touchscreen.tap(single.x, single.y);
   } else {
     // PC: ドラッグ1回で候補1件。1マスだけクリックすると30分の候補
     await page.mouse.move(from.x, from.y);
     await page.mouse.down();
     await page.mouse.move(to.x, to.y, { steps: 5 });
     await page.mouse.up();
+  }
+  await expect(page.getByText("10:00-12:00", { exact: true })).toBeVisible();
+  // 候補ができると画面の配置が変わることがあるので、位置を測り直す
+  const single = await cellPoint(page, 38);
+  if (mobile) {
+    await page.touchscreen.tap(single.x, single.y);
+    await page.touchscreen.tap(single.x, single.y);
+  } else {
     await page.mouse.click(single.x, single.y);
   }
-  await expect(page.getByText("10:00-12:00")).toBeVisible();
-  await expect(page.getByText("13:00-13:30")).toBeVisible();
+  await expect(page.getByText("13:00-13:30", { exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: "日程調整を作成する" }).click();
   await expect(page.getByText("日程調整を作成しました。")).toBeVisible();
@@ -94,6 +98,6 @@ test("横にドラッグすると、間の列も含めてどの列にも同じ�
     await page.mouse.move(to.x, to.y, { steps: 10 });
     await page.mouse.up();
   }
-  await expect(page.getByText("10:00-12:00")).toHaveCount(3);
-  await expect(page.getByText("新しい候補: 3件")).toBeVisible();
+  await expect(page.getByText("10:00-12:00", { exact: true })).toHaveCount(3);
+  await expect(page.getByText("候補 3 件")).toBeVisible();
 });

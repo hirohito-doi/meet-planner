@@ -11,11 +11,9 @@
   --font-sans: system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* 画面は明るい配色だけにする(暗い配色は用意していない) */
+:root {
+  color-scheme: light;
 }
 
 body {

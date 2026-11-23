@@ -1,18 +1,20 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { AppHeader } from "@/app/_components/ui";
 import { getDb } from "@/server/db/app-db";
 import { openAdmin, readPoll } from "@/server/poll";
 import { AdminPanel } from "./admin-panel";
 
 export default function Page({ params, searchParams }: PageProps<"/p/[pollId]/admin/[token]">) {
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-8">
-      <Suspense fallback={<p className="text-sm text-zinc-500">読み込んでいます…</p>}>
+    <>
+      <AppHeader label="管理画面" />
+      <Suspense fallback={<p className="px-6 py-8 text-sm text-slate-500">読み込んでいます…</p>}>
         {Promise.all([params, searchParams]).then(([{ pollId, token }, { created }]) => (
           <Admin pollId={pollId} token={token} created={created === "1"} />
         ))}
       </Suspense>
-    </main>
+    </>
   );
 }
 
