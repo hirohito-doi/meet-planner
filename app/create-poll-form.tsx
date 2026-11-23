@@ -45,7 +45,7 @@ export function CreatePollForm() {
               onChange={(e) => setTitle(e.target.value)}
               placeholder="タイトル(必須)"
               aria-label="タイトル(必須)"
-              className="w-full border-0 border-b-2 border-slate-200 bg-transparent px-0 py-2 text-3xl font-bold text-slate-900 placeholder:text-slate-300 focus:border-slate-900 focus:outline-none"
+              className="w-full border-0 border-b-2 border-slate-200 bg-transparent px-0 py-2 text-3xl font-bold text-slate-900 placeholder:text-slate-300 focus:border-accent focus:outline-none"
             />
             <textarea
               maxLength={1000}

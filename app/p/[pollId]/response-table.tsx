@@ -153,8 +153,8 @@ export function ResponseTable({ poll }: { poll: Omit<PollView, "ranking"> }) {
         <div className="max-h-[75vh] overflow-auto rounded-lg border border-slate-300 shadow-sm">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-slate-100">
-                <th className="sticky left-0 top-0 z-30 border-b-2 border-r border-slate-300 bg-slate-100 px-3 py-2 text-left text-sm font-bold text-slate-700">
+              <tr className="bg-accent-soft">
+                <th className="sticky left-0 top-0 z-30 border-b-2 border-r border-slate-300 bg-accent-soft px-3 py-2 text-left text-sm font-bold text-accent-soft-ink">
                   候補
                 </th>
                 {columns.map((r) => {
@@ -163,14 +163,14 @@ export function ResponseTable({ poll }: { poll: Omit<PollView, "ranking"> }) {
                     <th
                       key={r.id}
                       className={`sticky top-0 z-20 min-w-16 border-b-2 border-l border-slate-300 px-2 py-2 text-sm font-bold ${
-                        mine ? "bg-slate-200 text-slate-900" : "bg-slate-100 text-slate-800"
+                        mine ? "bg-accent text-on-accent" : "bg-accent-soft text-accent-soft-ink"
                       }`}
                     >
                       {mine && !finalized ? (
                         <button
                           type="button"
                           onClick={() => setEditingName(true)}
-                          className="rounded px-1 underline decoration-slate-400 underline-offset-4 hover:bg-slate-300"
+                          className="rounded px-1 underline decoration-current underline-offset-4 hover:bg-accent-strong"
                         >
                           {r.name}
                         </button>
@@ -210,7 +210,7 @@ export function ResponseTable({ poll }: { poll: Omit<PollView, "ranking"> }) {
                         <td
                           key={r.id}
                           className={`border-t border-slate-300 p-0 text-center text-2xl font-bold ${
-                            mine ? "border-x-2 border-x-slate-400" : "border-l"
+                            mine ? "border-x-2 border-x-own-line" : "border-l"
                           } ${value ? TONE[value] : ""}`}
                         >
                           {mine && !finalized ? (
@@ -317,7 +317,7 @@ function NameDialog({
               キャンセル
             </button>
           )}
-          <button type="submit" disabled={pending || !name.trim()} className="rounded-lg bg-slate-800 px-5 py-2.5 font-bold text-white hover:bg-slate-700 disabled:opacity-40">
+          <button type="submit" disabled={pending || !name.trim()} className="rounded-lg bg-accent px-5 py-2.5 font-bold text-on-accent hover:bg-accent-strong disabled:opacity-40">
             {submitLabel}
           </button>
         </div>

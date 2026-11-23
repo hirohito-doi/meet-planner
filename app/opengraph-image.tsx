@@ -24,7 +24,8 @@ export default function Image() {
           alignItems: "center",
           justifyContent: "center",
           gap: 56,
-          background: "#f8fafc",
+          background: "#fffbf6",
+          borderTop: "24px solid #f4a261",
         }}
       >
         <div style={{ display: "flex", gap: 48 }}>
@@ -34,7 +35,7 @@ export default function Image() {
             </svg>
           ))}
         </div>
-        <div style={{ fontSize: 88, fontWeight: 700, color: "#0f172a" }}>meet-planner</div>
+        <div style={{ fontSize: 88, fontWeight: 700, color: "#6b3410" }}>meet-planner</div>
       </div>
     ),
     size,

@@ -43,7 +43,7 @@ export function MonthCalendar({
   };
 
   return (
-    <div className="w-72 rounded border border-slate-300 p-2">
+    <div className="w-72 rounded border border-slate-300 bg-white p-2">
       <div className="mb-1 flex items-center justify-between">
         <button type="button" aria-label="前の月" onClick={() => move(-1)} className="flex size-10 items-center justify-center rounded border border-slate-300 text-xl hover:bg-slate-100">
           ‹
@@ -102,7 +102,7 @@ function DayButton({
   const color = fixed
     ? "bg-slate-300 text-slate-700"
     : added
-      ? "bg-slate-800 text-white"
+      ? "bg-accent text-on-accent"
       : weekday === 0
         ? "text-red-600 hover:bg-slate-100"
         : weekday === 6

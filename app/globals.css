@@ -1,13 +1,36 @@
 @import "tailwindcss";
 
+/*
+ * 色は役割の名前で指定する(docs/spec.md「画面のデザイン」)。
+ * 白に近い温かい背景に、抑えめのオレンジ。オレンジの上の文字は濃い茶色にして、明暗の差を控えめにしつつ読みやすくする。
+ * 色の案の比較はブランチ prototype/colors(A5 を選んだ)
+ */
 :root {
-  --background: #ffffff;
   --foreground: #171717;
+  --page: #fffbf6; /* ページの背景 */
+  --header: #fcdcbc; /* 上の帯 */
+  --header-ink: #6b3410; /* 上の帯の文字 */
+  --line: #f6c89a; /* 帯の下の線 */
+  --accent: #f4a261; /* 主なボタン、選んだ日付、表の候補 */
+  --accent-strong: #e8894a; /* アクセントの押したとき・選択中 */
+  --on-accent: #4a2408; /* アクセントの上の文字 */
+  --accent-soft: #feeedd; /* 表の見出しの行、作成中の候補 */
+  --accent-soft-ink: #6b3410; /* 淡いアクセントの上の文字 */
+  --own-line: #f4b884; /* 自分の列の縁 */
 }
 
 @theme inline {
-  --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-page: var(--page);
+  --color-header: var(--header);
+  --color-header-ink: var(--header-ink);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-on-accent: var(--on-accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-soft-ink: var(--accent-soft-ink);
+  --color-own-line: var(--own-line);
   --font-sans: system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
 }
 
@@ -17,7 +40,7 @@
 }
 
 body {
-  background: var(--background);
+  background: var(--page);
   color: var(--foreground);
   font-family: var(--font-sans);
 }
