@@ -317,5 +317,5 @@ function rowLabel(row: number) {
 function blockStyle(kind: Block["kind"], selected: boolean) {
   if (kind === "saved") return selected ? "border-slate-800 bg-slate-600 text-white ring-2 ring-slate-300" : "border-slate-400 bg-slate-200 text-slate-600";
   if (kind === "preview") return "border-dashed border-accent bg-accent-soft/80 text-accent-soft-ink";
-  return selected ? "border-accent-strong bg-accent-strong text-on-accent ring-2 ring-own-line" : "border-accent bg-accent text-on-accent";
+  return selected ? "border-accent-strong bg-accent-strong text-on-accent ring-2 ring-own-line" : "border-accent-strong bg-accent/60 text-on-accent";
 }
