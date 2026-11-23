@@ -148,6 +148,10 @@ test("存在しない日程調整や、正しくない管理用リンクを開�
   await page.goto(adminLink.replace(/[^/]+$/, "wrong-token"));
   await expect(page.getByRole("heading", { name: "ページが見つかりません" })).toBeVisible();
   await expect(page.getByText("忘年会")).toHaveCount(0);
+
+  // 本文のボタンから作成画面へ移れる
+  await page.getByRole("link", { name: "新しい日程調整を作る" }).click();
+  await expect(page).toHaveURL(/\/new$/);
 });
 
 test("日付を選ぶ前は、表の真ん中に「日付を選んでください」と出す", async ({ page }) => {
@@ -209,7 +213,7 @@ test("30分の候補を選んでも、時刻の文字が欠けずに見える", 
 
   const block = page.locator("[data-block-key]");
   await expect(block).toHaveCount(1);
-  // 時刻の文字が候補の枠の内側に収まり、つまみと重なっていない
+  // 時刻の文字が候補のブロックの内側に収まり、つまみと重なっていない
   const { text, frame, handles } = await block.evaluate((el) => {
     const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
     const node = walker.nextNode()!;
