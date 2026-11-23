@@ -205,3 +205,4 @@
 
 - ユーザーの指示で prototype/slot-grid・prototype/design・prototype/colors を削除した(GitHub には送っていなかった)。結論は仕様書に取り込み済みなので、仕様書とコメントからブランチへの参照だけを消した。
 - この記録の中の prototype/* への言及は、当時の作業の記録として残す。そのブランチはもうない。
+- docs/drop-prototypes をユーザーの承認を得て main にマージし、GitHub に送った。
