@@ -11,7 +11,7 @@ export async function scrollGridIntoView(page: Page) {
 /** 今日を 2026-11-22 に固定して作成画面を開き、カレンダーを 2026年12月 に進める */
 export async function openNextMonth(page: Page) {
   await page.clock.setFixedTime(new Date("2026-11-22T12:00:00+09:00"));
-  await page.goto("/");
+  await page.goto("/new");
   await expect(page.getByText("2026年11月")).toBeVisible();
   await page.getByRole("button", { name: "次の月" }).click();
   await expect(page.getByText("2026年12月")).toBeVisible();
