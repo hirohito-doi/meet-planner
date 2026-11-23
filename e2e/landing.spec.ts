@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("トップは紹介ページで、作成ボタンから作成画面へ進める", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle("○△× 日程調整");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("都合を集めて");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("日程調整を、もっとかんたんに");
   await expect(page.getByRole("heading", { name: "使い方" })).toBeVisible();
   // トップでは日程調整を作らない(フォームは /new にある)
   await expect(page.getByLabel("タイトル(必須)")).toHaveCount(0);
