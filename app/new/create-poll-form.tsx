@@ -3,10 +3,10 @@
 // 作成画面。左にタイトル・カレンダー・新しい候補の一覧と作成ボタン、右に候補を作る表(docs/spec.md「画面のデザイン」)
 import { useState, useTransition } from "react";
 import { formatSlot } from "@/lib/jst";
-import { MonthCalendar } from "./_components/month-calendar";
-import { SlotGrid } from "./_components/slot-grid";
-import { Button, ErrorMessage, Section, TwoColumns } from "./_components/ui";
-import { useDraftSlots } from "./_components/use-draft-slots";
+import { MonthCalendar } from "../_components/month-calendar";
+import { SlotGrid } from "../_components/slot-grid";
+import { Button, ErrorMessage, Section, TwoColumns } from "../_components/ui";
+import { useDraftSlots } from "../_components/use-draft-slots";
 import { createPollAction } from "./actions";
 
 export function CreatePollForm() {

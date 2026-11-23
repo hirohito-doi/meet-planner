@@ -9,7 +9,14 @@ export function AppHeader({ label }: { label?: string }) {
         <Link href="/" className="font-bold text-header-ink">
           meet-planner
         </Link>
-        {label && <span className="text-sm text-header-ink opacity-70">{label}</span>}
+        {/* 画面の名前があればそれを、なければ(紹介ページなど)作成画面への入り口を出す */}
+        {label ? (
+          <span className="text-sm text-header-ink opacity-70">{label}</span>
+        ) : (
+          <Link href="/new" className="rounded-md px-3 py-1.5 text-sm font-bold text-header-ink hover:bg-accent-soft">
+            日程調整を作る
+          </Link>
+        )}
       </div>
     </header>
   );
