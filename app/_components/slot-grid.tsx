@@ -194,10 +194,10 @@ export function SlotGrid({
       <div ref={scrollRef} className="relative max-h-[60vh] overflow-auto rounded border border-slate-300 bg-white">
         <div className="flex min-w-full">
           {/* 時刻の目盛り */}
-          <div className="sticky left-0 z-20 w-12 shrink-0 bg-white">
+          <div className="sticky left-0 z-20 w-16 shrink-0 bg-white">
             <div className="sticky top-0 z-10 h-10 border-b border-slate-300 bg-white" />
             {Array.from({ length: ROWS }, (_, row) => (
-              <div key={row} style={{ height: ROW_HEIGHT }} className="pr-1 text-right text-[10px] leading-none text-slate-500">
+              <div key={row} style={{ height: ROW_HEIGHT }} className="pr-2 text-right text-sm font-medium leading-none text-slate-600">
                 {row % 2 === 0 ? rowLabel(row) : ""}
               </div>
             ))}
