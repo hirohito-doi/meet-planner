@@ -241,3 +241,14 @@
 - 追加の依頼: 管理画面の「回答画面を開く」を新しいタブで開く。先に E2E(クリックすると新しいタブが開き、その URL が回答用リンクで、元のタブは管理画面のまま)を書いて失敗を確かめてから、target="_blank" を付けた。読み上げ用に「(新しいタブで開きます)」を足した。
 - 新しいタブの印に「↗」の文字を使ったら、書体によっては細い斜線(／)に見えてユーザーから「記号の見た目が変」と言われた。文字の記号は書体しだいで形が変わるので、SVG のアイコンに替えた。
 - feature/visibility をユーザーの承認を得て main にマージし、GitHub に送ってからブランチを削除した。
+
+## 24. Cloudflare Workers へのデプロイを試す(spike/cloudflare、マージしない)
+
+- ユーザーの依頼「試作してみて」。prototype スキルの「使い捨ての試作で問いに答える」に沿い、問いを「今のアプリは OpenNext + D1 で Workers の上で動くか」に決めた。ブランチは spike/cloudflare(main から)。
+- 変えたこと: @opennextjs/cloudflare と wrangler を足し、wrangler.jsonc(D1 の DB、マイグレーションのフォルダ)と open-next.config.ts を作った。アプリが使う getDb() を D1 に替え、Db の型を libsql と D1 の両方が満たす形に広げた。server/poll は変えていない。単体テストは libsql のまま通る。
+- Windows では OpenNext のビルドが、シンボリックリンクを作れずに失敗した(EPERM)。ユーザーの選択で、WSL の Ubuntu のホームに Node 24 を公式の配布ファイルから入れ(チェックサムを確認、管理者権限なし)、リポジトリを WSL 側に複製してビルドした。
+- WSL ではビルドが通ったが、`wrangler dev` で開くと静的なトップページも含めて 500 になった。Next.js が「setTimeout の実装のため Cache Components の動作を保証できない」と警告し、描画が止まったまま Workers に打ち切られていた。互換性フラグ(no_handle_cross_request_promise_resolution)で別のエラーを消しても、止まるだけで直らなかった。
+- このアプリが Cache Components に頼っているのは2画面の <Suspense> だけだったので、cacheComponents を切って試した。全画面が応答し、E2E を Workers のプレビュー(:8787)に向けると 28 件すべて通った(4件はもともと飛ばすテスト)。回答画面と管理画面の Cache-Control は `private, no-cache, no-store` だった。
+- 結論: Cloudflare にするなら cacheComponents を切る必要がある。切ると回答画面と管理画面は毎回すべて描くので、外側を先に返す速さは失う。ビルドは Windows ではできず、WSL か CI(Linux)で行う。
+- まだ確かめていないこと: 本物の Cloudflare への公開(アカウントと wrangler login が必要)、Windows での `pnpm dev`(D1 をまねる仕組みが Windows で動くか)。この試作のコードでは、getDb() が Workers の中でしか動かないので、Node で起動する今の E2E の設定(next start)はそのままでは動かない。
+- 学び: WSL で `pkill -f workerd` を `bash -c` の中で使うと、自分のコマンド行にも当たって自分を止めてしまう。後ろに続けた書き換えが実行されていなかった。
