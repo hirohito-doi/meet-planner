@@ -265,3 +265,10 @@
 - ADR 0005(Cloudflare Workers + D1、Cache Components は使わない)を書き、ADR 0002 に置き換えた旨を足した。spec.md の技術構成、README(Cloudflare のコマンドと、初めて公開するときの手順)、wrangler.jsonc のコメントを直した。
 - CI(.github/workflows/ci.yml)は、型チェック・lint・単体テストと、Workers の上での E2E を流す。Cloudflare には触らないので、API トークンは要らない。CI そのものは GitHub に送るまで動かせないので、まだ確かめていない。
 - feature/cloudflare をユーザーの承認を得て main にマージし、GitHub に送ってからブランチを削除した。spike/cloudflare は試作の記録として手元に残した。
+
+## 26. CI の初回の失敗を直す(fix/ci-typegen)
+
+- main に送ると CI が初めて動き、型チェックで `PageProps` と `LayoutProps` が見つからずに失敗した。この型は Next.js が `.next/types` に作るもので、手元では前のビルドの `.next/` が残っていたため通っていた。
+- `typecheck` を `next typegen && tsc --noEmit` にして、型を作ってから確かめるようにした。WSL に `.next/` のない新しい複製を作り、型チェック・lint・単体テストが通ることを確かめた。
+- 学び: 手元で通る確認は、前の実行で残ったファイルに助けられていることがある。CI と同じく、まっさらな複製で確かめる。
+- fix/ci-typegen をユーザーの承認を得て main にマージし、GitHub に送ってからブランチを削除した。
