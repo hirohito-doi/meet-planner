@@ -252,3 +252,15 @@
 - 結論: Cloudflare にするなら cacheComponents を切る必要がある。切ると回答画面と管理画面は毎回すべて描くので、外側を先に返す速さは失う。ビルドは Windows ではできず、WSL か CI(Linux)で行う。
 - まだ確かめていないこと: 本物の Cloudflare への公開(アカウントと wrangler login が必要)、Windows での `pnpm dev`(D1 をまねる仕組みが Windows で動くか)。この試作のコードでは、getDb() が Workers の中でしか動かないので、Node で起動する今の E2E の設定(next start)はそのままでは動かない。
 - 学び: WSL で `pkill -f workerd` を `bash -c` の中で使うと、自分のコマンド行にも当たって自分を止めてしまう。後ろに続けた書き換えが実行されていなかった。
+
+## 25. Cloudflare Workers + D1 を採用する(feature/cloudflare)
+
+- ユーザーは試作の結果を見て、Cloudflare の採用を選んだ。続けて3点を質問し、すべて推奨の案になった: 手元(pnpm dev、Windows の E2E)は今の SQLite のまま、GitHub Actions を今回足す、本物への公開は手順だけ用意してユーザーが行う。
+- prototype スキルの「試作のブランチは main に入れず、確かめた判断だけを本物のコードに入れる」に沿い、main から feature/cloudflare を作って試作の2コミットを取り込み、そこから整えた。spike/cloudflare は記録として残す。
+- getDb() は、Workers の中(navigator.userAgent が "Cloudflare-Workers")では D1、Node では libsql を開く。libsql は動的 import にして、別のファイル(libsql-app-db.ts)に分けた。next dev で D1 のまねを使う設定(initOpenNextCloudflareForDev)は外し、手元の開発は今までどおりにした。
+- E2E は `E2E_TARGET=workers` のときだけ、Workers 向けにビルドして `pnpm cf:preview` のサーバーに流す。Windows では Node で 28 件、WSL のプレビューに Windows のブラウザから流して 28 件、どちらも通った。
+- 学び: `wrangler dev` を直接起動すると、トップと作成画面のキャッシュが入らず、毎回描き直して「読み取り専用のキャッシュに書けない」エラーがログに並んだ。表示は正しいので E2E では気づけない。`opennextjs-cloudflare preview` はキャッシュを入れてから起動するので、こちらに替えると HIT になり、エラーも消えた。
+- 学び: WSL で `playwright install --with-deps` を実行すると、ブラウザに必要なライブラリを入れるため sudo のパスワード入力で止まる。管理者権限は使わない約束なので、サーバーだけ WSL で起動し、テストは Windows のブラウザから流した。CI(ubuntu-latest)では sudo が使えるので、そのまま入る。
+- 学び: TaskStop で止めても、WSL の中で起動したプロセスは残ることがある。前のプレビューが同じポートを使い続けていた。止めた後は WSL の中のプロセスも確かめる。
+- ADR 0005(Cloudflare Workers + D1、Cache Components は使わない)を書き、ADR 0002 に置き換えた旨を足した。spec.md の技術構成、README(Cloudflare のコマンドと、初めて公開するときの手順)、wrangler.jsonc のコメントを直した。
+- CI(.github/workflows/ci.yml)は、型チェック・lint・単体テストと、Workers の上での E2E を流す。Cloudflare には触らないので、API トークンは要らない。CI そのものは GitHub に送るまで動かせないので、まだ確かめていない。

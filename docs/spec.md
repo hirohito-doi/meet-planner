@@ -11,12 +11,12 @@
 
 ## 技術構成
 
-- TypeScript + Next.js。Node サーバーとして動かし、Vercel は使わない([ADR 0002](adr/0002-self-hosted-node-with-sqlite.md))。
-- DB は SQLite で、Drizzle ORM を経由してアクセスする。
+- TypeScript + Next.js。Cloudflare Workers で動かす(OpenNext で変換する)。Vercel は使わない([ADR 0005](adr/0005-cloudflare-workers-with-d1.md))。
+- DB は SQLite 系で、Drizzle ORM を経由してアクセスする。本番は Cloudflare D1、Node で動かすとき(開発、Windows の E2E、単体テスト)は libsql。
 - Server Actions を入口にする。ロジックは Next.js に依存しない `server/` に置き、Action はそれを呼ぶだけにする。
 - 各 Server Action では、入力値を検証(zod など)する。管理系の操作では、管理トークンを照合する。Server Actions は誰でも POST できる公開エンドポイントであるため。
 - スタイリングは Tailwind CSS、パッケージマネージャーは pnpm。
-- デプロイ先は未定。まずローカルで動かし、Docker で動く構成にしておく。
+- Next.js の Cache Components は使わない。Workers の上では描画が止まるため([ADR 0005](adr/0005-cloudflare-workers-with-d1.md))。
 
 ### モジュール構成
 
