@@ -189,8 +189,9 @@ export function ResponseTable({ poll }: { poll: Omit<PollView, "ranking"> }) {
                     >
                       <div className="flex items-center gap-2">
                         <div>
-                          <div className="text-sm font-bold text-slate-900">{day}</div>
-                          <div className="text-sm text-slate-700">{time}</div>
+                          {/* 何の日時に答えているかがすぐわかるよう、候補は ○△× と釣り合う大きさにする */}
+                          <div className="text-base font-bold text-slate-900 sm:text-lg">{day}</div>
+                          <div className="text-sm font-medium text-slate-700 sm:text-base">{time}</div>
                         </div>
                         {isFinalized && (
                           <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-bold text-white">確定</span>
