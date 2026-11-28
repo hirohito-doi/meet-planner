@@ -24,3 +24,4 @@ pnpm dev                                # http://localhost:3000
 | `pnpm typecheck` | 型チェック |
 | `pnpm lint` | ESLint |
 | `pnpm build` | 本番ビルド |
+| `pnpm seed:demo` | 動作確認用の日程調整(回答者5人)を作り、回答用リンクと管理用リンクを表示する。1つのブラウザでは1人分しか回答できないため、集計や確定を手早く確かめるのに使う |
