@@ -307,3 +307,11 @@
 - fix/site-url-build をユーザーの承認を得て main にマージし、GitHub に送ってからブランチを削除した。
 - 公開し直したあと、トップの og:image が本番の URL になったことを確かめた。続けて一時的な E2E(コミットしない)で、本番で作成 → 回答 → 確定 → 削除を流した。回答の保存、開き直しても残ること、スコア、回答画面と管理画面の no-store、確定、削除がすべて動いた。作った確認用の日程調整は、テストの中で必ず削除するようにした(try/finally)。
 - 学び: 「見つかりません」を getByText で探すと、見えない <title> が先に当たって失敗した。画面の文字を確かめるときは、見出しなどの役割(getByRole)で探す。
+
+## 31. 回数制限を付ける(feature/rate-limit)
+
+- ユーザーの依頼「回数制限をつける」。4つを質問し、対象は作成と回答の開始だけ(推奨)、回数は作成 5回/分・回答の開始 30回/分(推奨)、文言は短く「しばらく待ってから、もう一度お試しください。」、テストは単体テストで確かめて E2E では制限を外す(推奨)になった。
+- 仕組みは Cloudflare Workers の Rate Limiting の binding(wrangler.jsonc の ratelimits)。キーは CF-Connecting-IP。判定は server/poll ではなく Server Action の入口で行う(DB の外の仕組みで、Workers の中でしか使えないため)。ActionResult の code に RATE_LIMITED を足した。
+- tdd の流れ: 中身(applyRateLimit)を binding と同じ形の偽物の制限で確かめる単体テストを4件先に書き、モジュールがなくて失敗することを確かめてから実装した。止める行を消す変異でテストが失敗することも確かめ、$TEMP のバックアップから戻した。binding と要求の見出しを読む部分(rate-limit-context.ts)は分けた。
+- WSL のプレビュー(制限あり)で、一時的なテストで作成を6回続けると6回目に文言が出て止まることを確かめた。手元の wrangler dev も制限をまねて数える。E2E は `--var RATE_LIMIT:off` で外したプレビューと Node の両方で 28 件通った。
+- isWorkers() を server/runtime.ts に移し、DB の入口と回数制限で共有した。
