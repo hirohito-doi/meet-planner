@@ -1,21 +1,35 @@
 import "server-only";
-import { mkdirSync } from "node:fs";
-import path from "node:path";
-import { createDb, type Db, migrateDb } from "./index";
+import type { Db } from "./index";
 
-const DEFAULT_URL = "file:data/app.sqlite";
-
-let ready: Promise<Db> | undefined;
-
-/** アプリが使う DB。初めて呼ばれたときにマイグレーションを当てる(プロセスにつき1回) */
+/**
+ * アプリが使う DB(ADR 0005)。
+ * - Cloudflare Workers の中(本番、wrangler dev)では、wrangler.jsonc の D1(binding: DB)を使う。
+ *   マイグレーションは wrangler d1 migrations apply で先に当てておく。
+ * - Node で動かすとき(pnpm dev、pnpm start、Windows の E2E)は libsql(DATABASE_URL、なければ data/app.sqlite)。
+ *   初めて呼ばれたときにマイグレーションを当てる(プロセスにつき1回)。
+ */
 export function getDb(): Promise<Db> {
-  ready ??= (async () => {
-    const url = process.env.DATABASE_URL ?? DEFAULT_URL;
-    // ファイルの DB なら、置き場所のディレクトリを用意する
-    if (url.startsWith("file:")) mkdirSync(path.dirname(url.slice("file:".length)), { recursive: true });
-    const db = createDb(url);
-    await migrateDb(db);
-    return db;
-  })();
-  return ready;
+  return isWorkers() ? openD1() : openLibsql();
+}
+
+/** Workers のランタイムでは navigator.userAgent が "Cloudflare-Workers" になる */
+function isWorkers() {
+  return typeof navigator !== "undefined" && navigator.userAgent === "Cloudflare-Workers";
+}
+
+async function openD1(): Promise<Db> {
+  const [{ getCloudflareContext }, { drizzle }, schema] = await Promise.all([
+    import("@opennextjs/cloudflare"),
+    import("drizzle-orm/d1"),
+    import("./schema"),
+  ]);
+  const { env } = await getCloudflareContext({ async: true });
+  return drizzle(env.DB, { schema });
+}
+
+let libsql: Promise<Db> | undefined;
+
+function openLibsql(): Promise<Db> {
+  libsql ??= import("./libsql-app-db").then((m) => m.openLibsqlAppDb());
+  return libsql;
 }

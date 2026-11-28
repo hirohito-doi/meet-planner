@@ -1,0 +1,25 @@
+// Cloudflare Workers の設定(ADR 0005)。秘密の値はここに書かない(リポジトリは公開)。必要になったら wrangler secret put で入れる
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "meet-planner",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "meet-planner",
+      // 手元の D1 だけで試すための仮の ID。本番の D1 を作ったら wrangler d1 create の結果に置き換える
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "server/db/migrations"
+    }
+  ],
+  "vars": {
+    // プレビュー画像の URL を組み立てるためのサイトの URL。公開する前に、公開先の URL(https://…workers.dev や独自ドメイン)に替える
+    "SITE_URL": "http://localhost:8787"
+  }
+}

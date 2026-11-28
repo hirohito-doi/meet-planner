@@ -241,3 +241,26 @@
 - 追加の依頼: 管理画面の「回答画面を開く」を新しいタブで開く。先に E2E(クリックすると新しいタブが開き、その URL が回答用リンクで、元のタブは管理画面のまま)を書いて失敗を確かめてから、target="_blank" を付けた。読み上げ用に「(新しいタブで開きます)」を足した。
 - 新しいタブの印に「↗」の文字を使ったら、書体によっては細い斜線(／)に見えてユーザーから「記号の見た目が変」と言われた。文字の記号は書体しだいで形が変わるので、SVG のアイコンに替えた。
 - feature/visibility をユーザーの承認を得て main にマージし、GitHub に送ってからブランチを削除した。
+
+## 24. Cloudflare Workers へのデプロイを試す(spike/cloudflare、マージしない)
+
+- ユーザーの依頼「試作してみて」。prototype スキルの「使い捨ての試作で問いに答える」に沿い、問いを「今のアプリは OpenNext + D1 で Workers の上で動くか」に決めた。ブランチは spike/cloudflare(main から)。
+- 変えたこと: @opennextjs/cloudflare と wrangler を足し、wrangler.jsonc(D1 の DB、マイグレーションのフォルダ)と open-next.config.ts を作った。アプリが使う getDb() を D1 に替え、Db の型を libsql と D1 の両方が満たす形に広げた。server/poll は変えていない。単体テストは libsql のまま通る。
+- Windows では OpenNext のビルドが、シンボリックリンクを作れずに失敗した(EPERM)。ユーザーの選択で、WSL の Ubuntu のホームに Node 24 を公式の配布ファイルから入れ(チェックサムを確認、管理者権限なし)、リポジトリを WSL 側に複製してビルドした。
+- WSL ではビルドが通ったが、`wrangler dev` で開くと静的なトップページも含めて 500 になった。Next.js が「setTimeout の実装のため Cache Components の動作を保証できない」と警告し、描画が止まったまま Workers に打ち切られていた。互換性フラグ(no_handle_cross_request_promise_resolution)で別のエラーを消しても、止まるだけで直らなかった。
+- このアプリが Cache Components に頼っているのは2画面の <Suspense> だけだったので、cacheComponents を切って試した。全画面が応答し、E2E を Workers のプレビュー(:8787)に向けると 28 件すべて通った(4件はもともと飛ばすテスト)。回答画面と管理画面の Cache-Control は `private, no-cache, no-store` だった。
+- 結論: Cloudflare にするなら cacheComponents を切る必要がある。切ると回答画面と管理画面は毎回すべて描くので、外側を先に返す速さは失う。ビルドは Windows ではできず、WSL か CI(Linux)で行う。
+- まだ確かめていないこと: 本物の Cloudflare への公開(アカウントと wrangler login が必要)、Windows での `pnpm dev`(D1 をまねる仕組みが Windows で動くか)。この試作のコードでは、getDb() が Workers の中でしか動かないので、Node で起動する今の E2E の設定(next start)はそのままでは動かない。
+- 学び: WSL で `pkill -f workerd` を `bash -c` の中で使うと、自分のコマンド行にも当たって自分を止めてしまう。後ろに続けた書き換えが実行されていなかった。
+
+## 25. Cloudflare Workers + D1 を採用する(feature/cloudflare)
+
+- ユーザーは試作の結果を見て、Cloudflare の採用を選んだ。続けて3点を質問し、すべて推奨の案になった: 手元(pnpm dev、Windows の E2E)は今の SQLite のまま、GitHub Actions を今回足す、本物への公開は手順だけ用意してユーザーが行う。
+- prototype スキルの「試作のブランチは main に入れず、確かめた判断だけを本物のコードに入れる」に沿い、main から feature/cloudflare を作って試作の2コミットを取り込み、そこから整えた。spike/cloudflare は記録として残す。
+- getDb() は、Workers の中(navigator.userAgent が "Cloudflare-Workers")では D1、Node では libsql を開く。libsql は動的 import にして、別のファイル(libsql-app-db.ts)に分けた。next dev で D1 のまねを使う設定(initOpenNextCloudflareForDev)は外し、手元の開発は今までどおりにした。
+- E2E は `E2E_TARGET=workers` のときだけ、Workers 向けにビルドして `pnpm cf:preview` のサーバーに流す。Windows では Node で 28 件、WSL のプレビューに Windows のブラウザから流して 28 件、どちらも通った。
+- 学び: `wrangler dev` を直接起動すると、トップと作成画面のキャッシュが入らず、毎回描き直して「読み取り専用のキャッシュに書けない」エラーがログに並んだ。表示は正しいので E2E では気づけない。`opennextjs-cloudflare preview` はキャッシュを入れてから起動するので、こちらに替えると HIT になり、エラーも消えた。
+- 学び: WSL で `playwright install --with-deps` を実行すると、ブラウザに必要なライブラリを入れるため sudo のパスワード入力で止まる。管理者権限は使わない約束なので、サーバーだけ WSL で起動し、テストは Windows のブラウザから流した。CI(ubuntu-latest)では sudo が使えるので、そのまま入る。
+- 学び: TaskStop で止めても、WSL の中で起動したプロセスは残ることがある。前のプレビューが同じポートを使い続けていた。止めた後は WSL の中のプロセスも確かめる。
+- ADR 0005(Cloudflare Workers + D1、Cache Components は使わない)を書き、ADR 0002 に置き換えた旨を足した。spec.md の技術構成、README(Cloudflare のコマンドと、初めて公開するときの手順)、wrangler.jsonc のコメントを直した。
+- CI(.github/workflows/ci.yml)は、型チェック・lint・単体テストと、Workers の上での E2E を流す。Cloudflare には触らないので、API トークンは要らない。CI そのものは GitHub に送るまで動かせないので、まだ確かめていない。
