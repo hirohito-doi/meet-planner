@@ -38,8 +38,12 @@ test("日程調整を作成し、回答して、確定できる", async ({ page 
   }
   await expect(page.getByText("13:00-13:30", { exact: true })).toBeVisible();
 
+  // 作成画面と管理画面で、自動で削除されることを伝える
+  const retentionNote = page.getByText("最後の候補の日から90日たつと、自動で削除されます。");
+  await expect(retentionNote).toBeVisible();
   await page.getByRole("button", { name: "この内容で作成する" }).click();
   await expect(page.getByText("日程調整を作りました。")).toBeVisible();
+  await expect(retentionNote).toBeVisible();
   const responseLink = await page.getByRole("textbox").first().inputValue();
   const adminLink = page.url();
 

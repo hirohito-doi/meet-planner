@@ -2,11 +2,14 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "meet-planner",
-  "main": ".open-next/worker.js",
+  // 入口は worker.ts。要求は OpenNext が作る .open-next/worker.js に渡し、Cron Triggers の処理を足している
+  "main": "worker.ts",
   "compatibility_date": "2026-11-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   // バージョンごとの URL(Version URLs)は使わない。古いバージョンが本番の D1 につながったまま開けてしまい、ログにも残らないため
   "preview_urls": false,
+  // 自動削除(docs/spec.md「自動削除」)。毎日 18:00 UTC = 03:00 JST に、古い日程調整を削除する。cron の時刻は UTC
+  "triggers": { "crons": ["0 18 * * *"] },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"

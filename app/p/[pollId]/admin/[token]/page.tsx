@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AppHeader, Loading } from "@/app/_components/ui";
 import { getDb } from "@/server/db/app-db";
-import { openAdmin, readPoll } from "@/server/poll";
+import { openAdmin, readPoll, RETENTION_DAYS } from "@/server/poll";
 import { AdminPanel } from "./admin-panel";
 
 // 管理画面のタイトルは出さない(管理用リンクが誤って共有されても、プレビューで中身が分からないように)
@@ -28,5 +28,5 @@ async function Admin({ pollId, token, created }: { pollId: string; token: string
   if (!(await openAdmin(db, pollId, token))) notFound();
   const poll = await readPoll(db, pollId);
   if (!poll) notFound();
-  return <AdminPanel poll={poll} token={token} created={created} />;
+  return <AdminPanel poll={poll} token={token} created={created} retentionDays={RETENTION_DAYS} />;
 }

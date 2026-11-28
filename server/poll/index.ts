@@ -24,6 +24,7 @@ import {
 
 export { PollError, type PollErrorCode } from "./errors";
 export { openAdmin, type Admin } from "./admin";
+export { deleteExpiredPolls, RETENTION_DAYS } from "./retention";
 export type { Availability } from "./validation";
 
 
