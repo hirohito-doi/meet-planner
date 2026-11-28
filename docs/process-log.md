@@ -315,3 +315,4 @@
 - tdd の流れ: 中身(applyRateLimit)を binding と同じ形の偽物の制限で確かめる単体テストを4件先に書き、モジュールがなくて失敗することを確かめてから実装した。止める行を消す変異でテストが失敗することも確かめ、$TEMP のバックアップから戻した。binding と要求の見出しを読む部分(rate-limit-context.ts)は分けた。
 - WSL のプレビュー(制限あり)で、一時的なテストで作成を6回続けると6回目に文言が出て止まることを確かめた。手元の wrangler dev も制限をまねて数える。E2E は `--var RATE_LIMIT:off` で外したプレビューと Node の両方で 28 件通った。
 - isWorkers() を server/runtime.ts に移し、DB の入口と回数制限で共有した。
+- feature/rate-limit をユーザーの承認を得て main にマージし、GitHub に送ってからブランチを削除した。
