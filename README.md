@@ -47,7 +47,7 @@ Workers 向けのビルド(OpenNext)は Windows ではできないので、次�
 Cloudflare の管理画面(ブラウザ)だけで進められる。
 
 1. D1 のデータベースを `meet-planner` という名前で作り、`database_id` を wrangler.jsonc に書く。
-2. wrangler.jsonc の `SITE_URL` を公開先の URL(`https://meet-planner.<アカウントの workers.dev サブドメイン>.workers.dev`)に替える。サブドメインは Workers & Pages の画面で確かめられる。
+2. `.env.production` の `SITE_URL` を公開先の URL(`https://meet-planner.<アカウントの workers.dev サブドメイン>.workers.dev`)に替える(トップと作成画面はビルドのときに作るので、Workers の vars ではなくこのファイルに書く)。サブドメインは Workers & Pages の画面で確かめられる。
 3. 1 と 2 を main に入れて GitHub に送る。
 4. Workers & Pages で「Create application」から GitHub のリポジトリをつなぎ、Worker を作る。Worker の名前は wrangler.jsonc の `name`(`meet-planner`)と同じにする(違うとビルドが失敗する)。GitHub 側では「Cloudflare Workers & Pages」の GitHub App を入れて、このリポジトリを許可する。
 5. Worker の Settings > Build で次のように設定する。

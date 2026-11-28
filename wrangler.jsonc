@@ -19,9 +19,6 @@
       "database_id": "ecaa405e-0758-4c5d-bc00-408370bc5f77",
       "migrations_dir": "server/db/migrations"
     }
-  ],
-  "vars": {
-    // プレビュー画像の URL を組み立てるためのサイトの URL(公開先)。独自ドメインにしたら替える
-    "SITE_URL": "https://meet-planner.y4c.workers.dev"
-  }
+  ]
+  // SITE_URL は .env.production に書く(ビルドのときにも要るため。Workers の vars は実行中にしか読めない)
 }
