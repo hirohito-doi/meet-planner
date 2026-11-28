@@ -1,4 +1,5 @@
 import "server-only";
+import { isWorkers } from "../runtime";
 import type { Db } from "./index";
 
 /**
@@ -10,11 +11,6 @@ import type { Db } from "./index";
  */
 export function getDb(): Promise<Db> {
   return isWorkers() ? openD1() : openLibsql();
-}
-
-/** Workers のランタイムでは navigator.userAgent が "Cloudflare-Workers" になる */
-function isWorkers() {
-  return typeof navigator !== "undefined" && navigator.userAgent === "Cloudflare-Workers";
 }
 
 async function openD1(): Promise<Db> {

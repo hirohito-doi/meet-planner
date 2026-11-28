@@ -12,4 +12,4 @@
 - OpenNext のビルドは Windows ではできない(シンボリックリンクを作れない)。Workers 向けのビルドと、Workers の上での E2E は、Linux(GitHub Actions、または WSL)で行う。Windows の手元では、今までどおり Node で開発し、E2E も Node で流す。
 - 公開は Cloudflare の Workers Builds に任せる。GitHub のリポジトリをつなぎ、main に push すると Cloudflare 側の Linux でビルドして公開する。手元でビルドする環境は要らず、Cloudflare の API トークンを GitHub に置かずに済む。main へのマージには主催者(リポジトリの持ち主)の承認が要り、GitHub Actions が Workers の上で E2E を流すので、「main に入ったら公開」で確認は足りる。
 - main 以外のブランチのプレビュー版(Preview Builds)は使わない。プレビュー版は本番の設定を引き継がないため、別の D1 と wrangler.jsonc の `previews` の設定が要る。必要になったら用意する。
-- 秘密の値は wrangler.jsonc に書かない(リポジトリは公開)。管理用リンクはパスにトークンを含むので、Workers のログに残る。ログを見られる人を絞る。POST の回数制限(Cloudflare の Rate Limiting)は、公開後の様子を見て足す。
+- 秘密の値は wrangler.jsonc に書かない(リポジトリは公開)。管理用リンクはパスにトークンを含むので、Workers のログに残る。ログを見られる人を絞る。日程調整の作成と回答の開始には、Cloudflare の Rate Limiting で回数制限を付けた(docs/spec.md「回数制限」)。
