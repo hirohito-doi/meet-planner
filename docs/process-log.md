@@ -280,3 +280,4 @@
 - 学び: 最初の質問(公開を「手順だけ用意」か「一緒に今やる」か)は、どちらも手元から公開する前提で、Workers Builds を選択肢に入れていなかった。「CI は Cloudflare に触らない(トークンを置かない)」と決めたことで、手で公開するしかないと思い込んでいた。Windows ではビルドできないとわかった時点で、手元でビルドしない方法と比べて出すべきだった。
 - Cloudflare と OpenNext の公式ドキュメントを web-fetch のエージェントで確かめた: Worker の名前は wrangler.jsonc の name と同じでないとビルドが失敗する。Node は .node-version、pnpm は packageManager の版が使われる。`d1 migrations apply --remote` は CI では確認を飛ばす(バックアップは取る)。プレビュー版は本番の設定を引き継がない。
 - `cf:deploy` からビルドを外し、Workers Builds の Build command(`pnpm cf:build`)と Deploy command(`pnpm cf:deploy`)に分けた。`.node-version` を足した。プレビュー版は使わないことにして、README の手順でオフにするよう書いた。ADR 0005 と README を書き換えた。
+- docs/workers-builds をユーザーの承認を得て main にマージし、GitHub に送ってからブランチを削除した。
