@@ -264,3 +264,4 @@
 - 学び: TaskStop で止めても、WSL の中で起動したプロセスは残ることがある。前のプレビューが同じポートを使い続けていた。止めた後は WSL の中のプロセスも確かめる。
 - ADR 0005(Cloudflare Workers + D1、Cache Components は使わない)を書き、ADR 0002 に置き換えた旨を足した。spec.md の技術構成、README(Cloudflare のコマンドと、初めて公開するときの手順)、wrangler.jsonc のコメントを直した。
 - CI(.github/workflows/ci.yml)は、型チェック・lint・単体テストと、Workers の上での E2E を流す。Cloudflare には触らないので、API トークンは要らない。CI そのものは GitHub に送るまで動かせないので、まだ確かめていない。
+- feature/cloudflare をユーザーの承認を得て main にマージし、GitHub に送ってからブランチを削除した。spike/cloudflare は試作の記録として手元に残した。
