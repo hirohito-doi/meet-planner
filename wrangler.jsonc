@@ -1,0 +1,24 @@
+// Cloudflare Workers の設定(試作)。docs/spec.md と ADR はまだ Node サーバー + SQLite のまま
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "meet-planner",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "meet-planner",
+      // 手元の D1 だけで試すための仮の ID。本番の D1 を作ったら wrangler d1 create の結果に置き換える
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "server/db/migrations"
+    }
+  ],
+  "vars": {
+    "SITE_URL": "http://localhost:8787"
+  }
+}

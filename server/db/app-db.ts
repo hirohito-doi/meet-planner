@@ -1,21 +1,15 @@
 import "server-only";
-import { mkdirSync } from "node:fs";
-import path from "node:path";
-import { createDb, type Db, migrateDb } from "./index";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { drizzle } from "drizzle-orm/d1";
+import type { Db } from "./index";
+import * as schema from "./schema";
 
-const DEFAULT_URL = "file:data/app.sqlite";
-
-let ready: Promise<Db> | undefined;
-
-/** アプリが使う DB。初めて呼ばれたときにマイグレーションを当てる(プロセスにつき1回) */
-export function getDb(): Promise<Db> {
-  ready ??= (async () => {
-    const url = process.env.DATABASE_URL ?? DEFAULT_URL;
-    // ファイルの DB なら、置き場所のディレクトリを用意する
-    if (url.startsWith("file:")) mkdirSync(path.dirname(url.slice("file:".length)), { recursive: true });
-    const db = createDb(url);
-    await migrateDb(db);
-    return db;
-  })();
-  return ready;
+/**
+ * アプリが使う DB(Cloudflare D1)。接続はリクエストごとに Cloudflare から渡される。
+ * マイグレーションはここでは当てず、デプロイの前に wrangler d1 migrations apply で当てる。
+ * ./index は型だけを読む(libsql を Worker に入れないため)
+ */
+export async function getDb(): Promise<Db> {
+  const { env } = await getCloudflareContext({ async: true });
+  return drizzle(env.DB, { schema });
 }

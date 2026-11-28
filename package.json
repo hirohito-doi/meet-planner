@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",
+    "@opennextjs/cloudflare": "^1.20.19",
     "drizzle-orm": "^0.45.4",
     "next": "16.4.6",
     "react": "19.3.0",
@@ -36,7 +37,8 @@
     "tailwindcss": "4.3.3",
     "tsx": "^4.23.15",
     "typescript": "^5",
-    "vitest": "^5.1.1"
+    "vitest": "^5.1.1",
+    "wrangler": "^4.169.0"
   },
   "packageManager": "pnpm@10.32.1"
 }

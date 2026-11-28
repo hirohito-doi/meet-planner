@@ -1,3 +1,4 @@
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -17,3 +18,6 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+// next dev でも、wrangler.jsonc の D1(手元の .wrangler/ に置かれる)を getCloudflareContext() で使えるようにする
+initOpenNextCloudflareForDev();
