@@ -273,3 +273,10 @@
 - 学び: 手元で通る確認は、前の実行で残ったファイルに助けられていることがある。CI と同じく、まっさらな複製で確かめる。
 - fix/ci-typegen をユーザーの承認を得て main にマージし、GitHub に送ってからブランチを削除した。
 - ユーザーの依頼で spike/cloudflare も削除した(GitHub には送っていなかった)。試作の中身は feature/cloudflare に取り込んだ2コミットとして main の履歴に残っている。
+
+## 27. 公開を Cloudflare の Workers Builds に任せる(docs/workers-builds)
+
+- ユーザーから公開の手順を聞かれ、WSL の複製でビルドして `pnpm cf:deploy` を実行する手順を出した。「手元でビルドが必要か」と聞かれて、Cloudflare 側でビルドする Workers Builds を初めて案として出し、ユーザーはそちらを選んだ。
+- 学び: 最初の質問(公開を「手順だけ用意」か「一緒に今やる」か)は、どちらも手元から公開する前提で、Workers Builds を選択肢に入れていなかった。「CI は Cloudflare に触らない(トークンを置かない)」と決めたことで、手で公開するしかないと思い込んでいた。Windows ではビルドできないとわかった時点で、手元でビルドしない方法と比べて出すべきだった。
+- Cloudflare と OpenNext の公式ドキュメントを web-fetch のエージェントで確かめた: Worker の名前は wrangler.jsonc の name と同じでないとビルドが失敗する。Node は .node-version、pnpm は packageManager の版が使われる。`d1 migrations apply --remote` は CI では確認を飛ばす(バックアップは取る)。プレビュー版は本番の設定を引き継がない。
+- `cf:deploy` からビルドを外し、Workers Builds の Build command(`pnpm cf:build`)と Deploy command(`pnpm cf:deploy`)に分けた。`.node-version` を足した。プレビュー版は使わないことにして、README の手順でオフにするよう書いた。ADR 0005 と README を書き換えた。
