@@ -304,3 +304,4 @@
 - トップと作成画面の og:image が http://localhost:3000 になっていた。この2画面はビルドのときに作るが、wrangler.jsonc の vars は Workers の実行中にしか読めず、Cloudflare のビルドには SITE_URL がなかった。要求ごとに描く画面は正しかった。
 - SITE_URL を .env.production に移し、wrangler.jsonc の vars から消した。next build がこのファイルを読み、OpenNext は実行中にも読み込む。.gitignore の `.env*` に、このファイルだけを入れる例外を足した(秘密の値は入れない)。WSL でビルドして、ビルド時の画面と要求ごとの画面の両方が本番の URL になること、E2E が Workers と Node の両方で通ることを確かめた。
 - 学び: Workers の vars は実行中の値で、ビルドのときには見えない。ビルドのときに HTML を作る画面が使う値は、ビルドからも読める場所(.env.production や Workers Builds のビルド変数)に置く。手元のプレビューでは wrangler.jsonc の値がビルドの前から見えていたので、気づけなかった。
+- fix/site-url-build をユーザーの承認を得て main にマージし、GitHub に送ってからブランチを削除した。
