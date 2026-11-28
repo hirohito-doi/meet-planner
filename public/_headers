@@ -1,0 +1,4 @@
+# Cloudflare の静的ファイルの配信で付ける見出し(OpenNext の推奨)。
+# /_next/static/ のファイル名には版ごとの印が入り、中身が変わらないので、長くキャッシュしてよい
+/_next/static/*
+  Cache-Control: public,max-age=31536000,immutable
