@@ -287,6 +287,7 @@
 - ユーザーの依頼で、Cloudflare と OpenNext の公式ドキュメント(get-started、caching、Workers Logs、D1 の置き場所、Version URLs など)と照らし合わせた。web-fetch のエージェントに読ませ、文言を引用させた。
 - 直した(ユーザーは推奨を選んだ): `public/_headers` で `/_next/static/*` に長期キャッシュを付けた(今までは Cloudflare の初期設定の max-age=0 で、毎回確かめ直していた)。静的なページのキャッシュの先回り(enableCacheInterception)を有効にした。WSL でビルドして、JS の見出しが immutable になり、トップと作成画面が Next.js を通さずに返ること、E2E 28 件が通ること、ログにエラーがないことを確かめた。
 - ログ(Workers Logs)は、ユーザーの判断で初期設定(要求ごとのログあり)のままにした。管理用リンクのトークンがログに残ることは伝えた。
-- 版ごとの URL(Version URLs)を切るかは、ユーザーが説明を求めたので保留。
+- 版ごとの URL(Version URLs)は、説明したうえでユーザーの判断で切った(wrangler.jsonc の preview_urls: false)。古いバージョンが本番の D1 につながったまま開け、ログにも残らないため。
 - 手順書の例にある WORKER_SELF_REFERENCE(再検証用)と IMAGES(画像の最適化用)は、このアプリでは使わないので足さなかった。
 - 学び: 前の回答で「cloudflare-env.d.ts に NEXTJS_ENV が入るのは良くない」と書いたが、OpenNext の手順書どおりの .dev.vars から入るもので、問題ではなかった。確かめる前に問題だと言わない。
+- perf/cloudflare-caching をユーザーの承認を得て main にマージし、GitHub に送ってからブランチを削除した。
