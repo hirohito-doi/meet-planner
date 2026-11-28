@@ -3,7 +3,7 @@ import "./globals.css";
 import { SITE_NAME } from "./_lib/site";
 
 export const metadata: Metadata = {
-  // プレビュー画像の URL を組み立てるためのサイトの URL。公開するときに SITE_URL を設定する
+  // プレビュー画像の URL を組み立てるためのサイトの URL。本番の値は .env.production(ビルドのときにも読まれる)
   metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
   title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
   description: "みんなの都合を ○△× で集めて、日時を1つに決める日程調整サービス",
