@@ -13,7 +13,11 @@
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "seed:demo": "tsx scripts/seed-demo/cli.ts"
+    "seed:demo": "tsx scripts/seed-demo/cli.ts",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "wrangler d1 migrations apply meet-planner --local && wrangler dev --port 8787",
+    "cf:deploy": "opennextjs-cloudflare build && wrangler d1 migrations apply meet-planner --remote && opennextjs-cloudflare deploy",
+    "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",
