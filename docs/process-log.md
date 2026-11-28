@@ -272,3 +272,4 @@
 - `typecheck` を `next typegen && tsc --noEmit` にして、型を作ってから確かめるようにした。WSL に `.next/` のない新しい複製を作り、型チェック・lint・単体テストが通ることを確かめた。
 - 学び: 手元で通る確認は、前の実行で残ったファイルに助けられていることがある。CI と同じく、まっさらな複製で確かめる。
 - fix/ci-typegen をユーザーの承認を得て main にマージし、GitHub に送ってからブランチを削除した。
+- ユーザーの依頼で spike/cloudflare も削除した(GitHub には送っていなかった)。試作の中身は feature/cloudflare に取り込んだ2コミットとして main の履歴に残っている。
