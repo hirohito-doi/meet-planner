@@ -21,7 +21,7 @@ async function setup() {
   return { db, pollId, adminToken, dec3, dec4 };
 }
 
-describe("管理者として開く", () => {
+describe("主催者として開く", () => {
   test("でたらめな管理トークンでは開けない", async () => {
     const { db, pollId } = await setup();
 

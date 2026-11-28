@@ -11,6 +11,7 @@ import {
   useSyncExternalStore,
   useTransition,
 } from "react";
+import { CELL_COLOR, MARK_COLOR, SYMBOL } from "@/app/_components/availability";
 import { formatSlot } from "@/lib/jst";
 import type { ActionResult } from "@/app/_lib/action-result";
 import type { Availability, PollView } from "@/server/poll";
@@ -19,13 +20,6 @@ import { joinAction, renameAction, setAvailabilityAction } from "./actions";
 type Me = { responseId: string; editToken: string };
 type Cell = Availability | null;
 
-const SYMBOL: Record<Availability, string> = { yes: "○", maybe: "△", no: "×" };
-/** 可否ごとの色。記号の色とマスの背景色 */
-const TONE: Record<Availability, string> = {
-  yes: "bg-emerald-50 text-emerald-600",
-  maybe: "bg-amber-50 text-amber-500",
-  no: "bg-rose-50 text-rose-500",
-};
 
 /** 可否の印。太さをそろえるため SVG で描き、読み上げとテストのために記号の文字も持つ */
 function Mark({ value }: { value: Availability }) {
@@ -49,7 +43,7 @@ function splitSlot(slot: { start: number; end: number }) {
   const space = text.indexOf(" ");
   return { day: text.slice(0, space), time: text.slice(space + 1) };
 }
-/** タップするたびに 空欄 → ○ → △ → × → 空欄 と切り替わる */
+/** タップするたびに 未回答 → ○ → △ → × → 未回答 と切り替わる */
 const NEXT: Record<"none" | Availability, Cell> = { none: "yes", yes: "maybe", maybe: "no", no: null };
 /** 同じセルを素早く何度もタップしたときは、最後の値だけを保存する */
 const SAVE_DELAY = 400;
@@ -211,7 +205,7 @@ export function ResponseTable({ poll }: { poll: Omit<PollView, "ranking"> }) {
                           key={r.id}
                           className={`border-t border-slate-300 p-0 text-center text-2xl font-bold ${
                             mine ? "border-x-2 border-x-own-line" : "border-l"
-                          } ${value ? TONE[value] : ""}`}
+                          } ${value ? `${CELL_COLOR[value]} ${MARK_COLOR[value]}` : ""}`}
                         >
                           {mine && !finalized ? (
                             <button

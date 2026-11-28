@@ -72,3 +72,13 @@ export function resizeSlot(date: string, slot: TimeRange, edge: "start" | "end",
   const end = Math.max(Math.min(rowStart(date, row + 1), last), slot.start + STEP);
   return { start: slot.start, end };
 }
+
+/**
+ * 候補を列のどの行に描くか(先頭の行と行数)。保存済みの候補は開始の日付の列に描くため、
+ * 日付をまたぐ長い候補は列の終わり(翌日 6:00)を越えることがある。そのときは列の終わりで切る
+ */
+export function rowsInColumn(date: string, slot: TimeRange): { top: number; rows: number } {
+  const top = (slot.start - rowStart(date, 0)) / STEP;
+  const bottom = Math.min((slot.end - rowStart(date, 0)) / STEP, ROWS);
+  return { top, rows: bottom - top };
+}

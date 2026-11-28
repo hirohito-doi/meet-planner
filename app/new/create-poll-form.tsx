@@ -103,7 +103,7 @@ export function CreatePollForm() {
           <p className="text-sm text-slate-500">
             {slots.dates.length === 0
               ? "カレンダーで日付を選ぶと、表に列ができます。"
-              : "PC はドラッグ、スマホは開始と終了のマスを順にタップして候補を作ります。横にドラッグすると、複数の日にまとめて作れます。"}
+              : "PC はドラッグ、スマホは開始と終了のマスを順にタップして候補を作ります。横にドラッグすると、複数の日にまとめて作れます。候補を選ぶと、上下のつまみで長さを変えられます。"}
           </p>
           <SlotGrid
             dates={slots.dates}

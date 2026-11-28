@@ -1,5 +1,5 @@
 // リンクを LINE や Slack などに貼ったときのプレビュー画像。すべてのページで使う。
-// 日本語の書体を同梱しないため、画像には ○△× の図形だけを描く(サービス名とタイトルはプレビューの文字で出る)
+// 日本語の書体を同梱しないため、画像には ○△× の図形と上端のオレンジの帯だけを描く(サービス名とタイトルはプレビューの文字で出る)
 import { ImageResponse } from "next/og";
 import { SITE_NAME } from "./_lib/site";
 
@@ -24,7 +24,7 @@ export default function Image() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-                    background: "#fffbf6",
+          background: "#fffbf6",
           borderTop: "24px solid #f4a261",
         }}
       >

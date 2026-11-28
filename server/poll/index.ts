@@ -10,7 +10,7 @@ import {
   updateResponseName,
 } from "./store";
 import { hashToken, newId, newToken } from "./token";
-import { PollError } from "./errors";
+import { finalizedError, PollError } from "./errors";
 import { assertNotFinalized, assertSlotCount, assertSlotInPoll } from "./guards";
 import { type SlotInput, uniqueSlots } from "./slots";
 import {
@@ -64,7 +64,7 @@ export async function join(db: Db, pollId: string, rawInput: { name: string }) {
   const input = parse(joinSchema, rawInput);
   const poll = await findPoll(db, pollId);
   if (!poll) throw new PollError("NOT_FOUND", "日程調整が見つかりません");
-  if (poll.finalizedSlotId !== null) throw new PollError("FINALIZED", "日程が確定しているため変更できません");
+  if (poll.finalizedSlotId !== null) throw finalizedError();
   if (poll.responses.length >= MAX_RESPONDENTS) {
     throw new PollError("LIMIT_EXCEEDED", `回答者は${MAX_RESPONDENTS}人までです`);
   }

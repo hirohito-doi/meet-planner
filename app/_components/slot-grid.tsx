@@ -3,7 +3,7 @@
 // 候補を作る表。docs/spec.md「候補の作成」「表のレイアウト」
 import { useEffect, useRef, useState } from "react";
 import { formatClockInColumn, formatDay, jstDate, jstMidnight } from "@/lib/jst";
-import { columnsBetween, layout, resizeSlot, ROWS, slotFromRows } from "@/lib/slot-grid";
+import { columnsBetween, layout, resizeSlot, rowsInColumn, ROWS, slotFromRows } from "@/lib/slot-grid";
 
 /** 画面の中だけにある、まだ保存していない候補。作った列(date)を覚えておく */
 export type DraftSlot = { key: string; date: string; start: number; end: number };
@@ -218,7 +218,6 @@ export function SlotGrid({
     return blocks;
   };
 
-  const rowOf = (date: string, time: number) => (time - jstMidnight(date) + 6 * 60 * 60 * 1000) / (30 * 60 * 1000);
 
   return (
     <div ref={rootRef} className="relative select-none">
@@ -285,18 +284,19 @@ export function SlotGrid({
                 <div className="absolute inset-y-0 left-0 right-6">
                   {layout(blocksOf(date)).map(({ slot, lane, lanes }) => {
                     const width = `min(160px, calc(100% / ${lanes}))`;
+                    const { top, rows } = rowsInColumn(date, slot);
                     return (
                       <div
                         key={slot.key}
                         data-block-key={slot.kind === "preview" ? undefined : slot.key}
                         style={{
-                          top: rowOf(date, slot.start) * ROW_HEIGHT,
-                          height: ((slot.end - slot.start) / (30 * 60 * 1000)) * ROW_HEIGHT,
+                          top: top * ROW_HEIGHT,
+                          height: rows * ROW_HEIGHT,
                           left: `calc(${lane} * ${width})`,
                           width,
                         }}
-                        className={`absolute overflow-hidden rounded border px-1 text-xs leading-tight ${
-                          onResize && slot.kind === "draft" && selected === slot.key ? "pt-3" : ""
+                        className={`absolute rounded border px-1 text-xs leading-tight ${
+                          selected === slot.key ? "z-[5]" : ""
                         } ${
                           slot.kind !== "preview" && isSelectable(slot.key) ? "cursor-pointer" : "cursor-default"
                         } ${blockStyle(
@@ -304,7 +304,10 @@ export function SlotGrid({
                           selected === slot.key,
                         )}`}
                       >
-                        {formatClockInColumn(date, slot.start)}-{formatClockInColumn(date, slot.end, { isEnd: true })}
+                        <span className="block h-full overflow-hidden">
+                          {formatClockInColumn(date, slot.start)}-{formatClockInColumn(date, slot.end, { isEnd: true })}
+                        </span>
+                        {/* つまみはブロックの外に出し、短い候補でも時刻の文字と重ならないようにする */}
                         {onResize &&
                           slot.kind === "draft" &&
                           selected === slot.key &&
@@ -315,15 +318,15 @@ export function SlotGrid({
                               data-resize-key={slot.key}
                               data-resize-date={date}
                               aria-hidden
-                              className={`absolute inset-x-0 flex h-3 cursor-ns-resize touch-none justify-center ${
-                                edge === "start" ? "top-0 items-start" : "bottom-0 items-end"
+                              className={`absolute inset-x-0 flex h-4 cursor-ns-resize touch-none justify-center ${
+                                edge === "start" ? "-top-2.5 items-start" : "-bottom-2.5 items-end"
                               }`}
                               onPointerDown={startResize}
                               onPointerMove={moveResize}
                               onPointerUp={endResize}
                               onPointerCancel={endResize}
                             >
-                              <span className="my-0.5 h-1 w-6 rounded-full bg-on-accent/70" />
+                              <span className="h-1.5 w-8 rounded-full border border-accent-strong bg-white" />
                             </span>
                           ))}
                       </div>
