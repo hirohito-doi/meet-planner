@@ -43,8 +43,12 @@ export function AdminPanel({ poll, token, created }: { poll: PollView; token: st
             <h1 className="text-3xl font-bold text-slate-900">{poll.title}</h1>
             {poll.description && <p className="whitespace-pre-wrap text-slate-600">{poll.description}</p>}
           </div>
-          <Link href={`/p/${poll.id}`} className="text-sm font-medium text-slate-700 underline underline-offset-4 hover:text-slate-950">
+          <Link
+            href={`/p/${poll.id}`}
+            className="inline-flex items-center gap-1.5 rounded-lg border-2 border-accent bg-white px-4 py-2 font-bold text-accent-soft-ink shadow-sm hover:bg-accent-soft"
+          >
             回答画面を開く
+            <span aria-hidden>→</span>
           </Link>
         </div>
       }
