@@ -231,3 +231,11 @@ test("30分の候補を選んでも、時刻の文字が欠けずに見える", 
   expect(handles).toHaveLength(2);
   for (const h of handles) expect(h.bottom <= text.top + 0.5 || h.top >= text.bottom - 0.5).toBe(true);
 });
+
+test("管理画面の「回答画面を開く」は、管理画面を残したまま新しいタブで回答画面を開く", async ({ page }, testInfo) => {
+  const { responseLink, adminLink } = await createPollWithOneSlot(page, testInfo.project.name === "mobile");
+
+  const [tab] = await Promise.all([page.waitForEvent("popup"), page.getByRole("link", { name: /回答画面を開く/ }).click()]);
+  await expect(tab).toHaveURL(responseLink);
+  await expect(page).toHaveURL(adminLink);
+});

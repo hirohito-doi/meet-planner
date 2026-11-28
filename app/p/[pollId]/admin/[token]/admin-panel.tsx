@@ -43,12 +43,19 @@ export function AdminPanel({ poll, token, created }: { poll: PollView; token: st
             <h1 className="text-3xl font-bold text-slate-900">{poll.title}</h1>
             {poll.description && <p className="whitespace-pre-wrap text-slate-600">{poll.description}</p>}
           </div>
+          {/* 管理画面を残したまま回答画面を見比べられるよう、新しいタブで開く */}
           <Link
             href={`/p/${poll.id}`}
+            target="_blank"
+            rel="noopener"
             className="inline-flex items-center gap-1.5 rounded-lg border-2 border-accent bg-white px-4 py-2 font-bold text-accent-soft-ink shadow-sm hover:bg-accent-soft"
           >
             回答画面を開く
-            <span aria-hidden>→</span>
+            {/* 新しいタブで開く印(四角から右上へ出る矢印) */}
+            <svg viewBox="0 0 20 20" aria-hidden className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 3h6v6M17 3l-8 8M15 12v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h4" />
+            </svg>
+            <span className="sr-only">(新しいタブで開きます)</span>
           </Link>
         </div>
       }
