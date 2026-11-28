@@ -30,21 +30,30 @@ pnpm dev                                # http://localhost:3000
 
 ## Cloudflare Workers
 
-本番は Cloudflare Workers + D1 で動かす。Workers 向けのビルド(OpenNext)は Windows ではできないので、以下は Linux か WSL で行う。GitHub Actions は push のたびに、Workers 向けにビルドして E2E を流す(Cloudflare への公開はしない)。
+本番は Cloudflare Workers + D1 で動かす。main に push すると、Cloudflare 側(Workers Builds)でビルドして公開する。手元でビルドする必要はない。GitHub Actions は push と pull request のたびに、Workers 向けにビルドして E2E を流す(公開はしない)。
+
+Workers 向けのビルド(OpenNext)は Windows ではできないので、次のコマンドを手元で使うときは Linux か WSL で実行する。
 
 | コマンド | 内容 |
 |---|---|
 | `pnpm cf:build` | Workers 向けにビルドする(`.open-next/` に出力) |
 | `pnpm cf:preview` | 手元の D1 にマイグレーションを当て、ビルドしたものを Workers のランタイムで起動する(http://localhost:8787) |
 | `E2E_TARGET=workers pnpm test:e2e` | Workers 向けにビルドし、`cf:preview` のサーバーに E2E を流す |
-| `pnpm cf:deploy` | ビルドし、本番の D1 にマイグレーションを当て、公開する |
+| `pnpm cf:deploy` | 本番の D1 にマイグレーションを当て、ビルドしたものを公開する(Workers Builds が実行する) |
 | `pnpm cf:typegen` | wrangler.jsonc から `cloudflare-env.d.ts`(D1 などの型)を作り直す |
 
 ### 初めて公開するとき
 
-1. `pnpm exec wrangler login` で Cloudflare のアカウントにログインする。
-2. `pnpm exec wrangler d1 create meet-planner` で本番の D1 を作り、表示された `database_id` を wrangler.jsonc に書く。
-3. wrangler.jsonc の `SITE_URL` を公開先の URL(例: `https://meet-planner.<アカウント>.workers.dev`)に替える。
-4. `pnpm cf:deploy` を実行する。
+Cloudflare の管理画面(ブラウザ)だけで進められる。
 
-秘密の値は wrangler.jsonc に書かず、`wrangler secret put` で入れる(リポジトリは公開)。
+1. D1 のデータベースを `meet-planner` という名前で作り、`database_id` を wrangler.jsonc に書く。
+2. wrangler.jsonc の `SITE_URL` を公開先の URL(`https://meet-planner.<アカウントの workers.dev サブドメイン>.workers.dev`)に替える。サブドメインは Workers & Pages の画面で確かめられる。
+3. 1 と 2 を main に入れて GitHub に送る。
+4. Workers & Pages で「Create application」から GitHub のリポジトリをつなぎ、Worker を作る。Worker の名前は wrangler.jsonc の `name`(`meet-planner`)と同じにする(違うとビルドが失敗する)。GitHub 側では「Cloudflare Workers & Pages」の GitHub App を入れて、このリポジトリを許可する。
+5. Worker の Settings > Build で次のように設定する。
+   - Build command: `pnpm cf:build`
+   - Deploy command: `pnpm cf:deploy`
+   - Branch control: 本番のブランチは `main`。「Enable Preview Builds」はオフにする(プレビュー版は本番の D1 を引き継がず、別の DB の用意が要るため)
+6. main に push する(または管理画面からビルドをやり直す)と、ビルドと公開が走る。
+
+Node は `.node-version`、pnpm は package.json の `packageManager` の版が使われる。秘密の値は wrangler.jsonc に書かず、Worker の Settings > Variables & Secrets で入れる(リポジトリは公開)。
