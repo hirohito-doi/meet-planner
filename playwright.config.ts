@@ -20,7 +20,8 @@ export default defineConfig({
   ],
   webServer: WORKERS
     ? {
-        command: "pnpm cf:build && pnpm cf:preview",
+        // E2E は短い時間に何十件も作るので、回数制限は外す(制限そのものは単体テストで確かめる)
+        command: "pnpm cf:build && pnpm cf:preview --var RATE_LIMIT:off",
         timeout: 300_000,
         url: `http://localhost:${PORT}`,
         reuseExistingServer: !process.env.CI,

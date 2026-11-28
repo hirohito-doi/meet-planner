@@ -5,10 +5,11 @@ import { refresh } from "next/cache";
 import { getDb } from "@/server/db/app-db";
 import { type Availability, join, openResponse, PollError } from "@/server/poll";
 import { type ActionResult, runAction } from "@/app/_lib/action-result";
+import { rateLimit } from "@/app/_lib/rate-limit-context";
 
+/** 回答を始める(回答者を作る)。回答者の行が増えるので、回数を制限する */
 export async function joinAction(pollId: string, name: string): Promise<ActionResult<{ responseId: string; editToken: string }>> {
-  const db = await getDb();
-  const result = await runAction(() => join(db, pollId, { name }));
+  const result = await rateLimit("join", async () => runAction(() => getDb().then((db) => join(db, pollId, { name }))));
   if (result.ok) refresh();
   return result;
 }

@@ -2,7 +2,10 @@ import "server-only";
 import { PollError, type PollErrorCode } from "@/server/poll";
 
 /** Server Action の戻り値。画面はこれを見てメッセージを出す */
-export type ActionResult<T = null> = { ok: true; value: T } | { ok: false; code: PollErrorCode; message: string };
+/** 回数制限(RATE_LIMITED)は server/poll の外、Server Action の入口で判定する(rate-limit.ts) */
+export type ActionResult<T = null> =
+  | { ok: true; value: T }
+  | { ok: false; code: PollErrorCode | "RATE_LIMITED"; message: string };
 
 // 画面に出す文言の持ち主をコードごとに決める。
 // 見つからない・入力が不正のときは、server/poll の文言(開発者向けの詳しい内容)を見せず、ここの文言を出す。
