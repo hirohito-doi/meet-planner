@@ -15,13 +15,13 @@
     {
       "binding": "DB",
       "database_name": "meet-planner",
-      // 手元の D1 だけで試すための仮の ID。本番の D1 を作ったら wrangler d1 create の結果に置き換える
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      // 本番の D1(Cloudflare の管理画面で作成)。手元の wrangler dev では、この ID でローカルのまねを作る
+      "database_id": "ecaa405e-0758-4c5d-bc00-408370bc5f77",
       "migrations_dir": "server/db/migrations"
     }
   ],
   "vars": {
-    // プレビュー画像の URL を組み立てるためのサイトの URL。公開する前に、公開先の URL(https://…workers.dev や独自ドメイン)に替える
-    "SITE_URL": "http://localhost:8787"
+    // プレビュー画像の URL を組み立てるためのサイトの URL(公開先)。独自ドメインにしたら替える
+    "SITE_URL": "https://meet-planner.y4c.workers.dev"
   }
 }

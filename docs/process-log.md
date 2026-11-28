@@ -291,3 +291,9 @@
 - 手順書の例にある WORKER_SELF_REFERENCE(再検証用)と IMAGES(画像の最適化用)は、このアプリでは使わないので足さなかった。
 - 学び: 前の回答で「cloudflare-env.d.ts に NEXTJS_ENV が入るのは良くない」と書いたが、OpenNext の手順書どおりの .dev.vars から入るもので、問題ではなかった。確かめる前に問題だと言わない。
 - perf/cloudflare-caching をユーザーの承認を得て main にマージし、GitHub に送ってからブランチを削除した。
+
+## 29. 本番の D1 と URL を設定する(chore/production-config)
+
+- ユーザーが Cloudflare の管理画面で D1(meet-planner)を作り、database_id と workers.dev のサブドメイン(y4c)を教えてくれた。wrangler.jsonc の database_id を本番の ID に、SITE_URL を https://meet-planner.y4c.workers.dev にした。database_id は秘密の値ではない(アカウントにログインしないと D1 に触れない)ので、公開リポジトリに入れた。
+- サブドメインがわからないと言われたので、URL のどこに入るか、あとで変えると共有済みのリンクが開けなくなることを説明した。
+- chore/production-config をユーザーの承認を得て main にマージし、GitHub に送ってからブランチを削除した。
