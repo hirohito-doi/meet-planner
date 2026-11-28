@@ -38,6 +38,7 @@ Workers 向けのビルド(OpenNext)は Windows ではできないので、次�
 |---|---|
 | `pnpm cf:build` | Workers 向けにビルドする(`.open-next/` に出力) |
 | `pnpm cf:preview` | 手元の D1 にマイグレーションを当て、ビルドしたものを Workers のランタイムで起動する(http://localhost:8787) |
+| `pnpm cf:preview --test-scheduled` | 上と同じく起動し、`curl "http://localhost:8787/__scheduled?cron=0+18+*+*+*"` で自動削除(毎日 3:00 JST の Cron Triggers)を1回動かせるようにする |
 | `E2E_TARGET=workers pnpm test:e2e` | Workers 向けにビルドし、`cf:preview` のサーバーに E2E を流す |
 | `pnpm cf:deploy` | 本番の D1 にマイグレーションを当て、ビルドしたものを公開する(Workers Builds が実行する) |
 | `pnpm cf:typegen` | wrangler.jsonc から `cloudflare-env.d.ts`(D1 などの型)を作り直す |

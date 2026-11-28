@@ -9,7 +9,8 @@ import { Button, ErrorMessage, Section, TwoColumns } from "../_components/ui";
 import { useDraftSlots } from "../_components/use-draft-slots";
 import { createPollAction } from "./actions";
 
-export function CreatePollForm() {
+/** retentionDays: 最後の候補の日から自動で削除されるまでの日数(server/poll の RETENTION_DAYS) */
+export function CreatePollForm({ retentionDays }: { retentionDays: number }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const slots = useDraftSlots();
@@ -95,6 +96,7 @@ export function CreatePollForm() {
                 {pending ? "作成しています…" : "この内容で作成する"}
               </Button>
               <p className="text-xs text-slate-500">作ると、回答用のリンクと管理用のリンクができます。</p>
+              <p className="text-xs text-slate-500">最後の候補の日から{retentionDays}日たつと、自動で削除されます。</p>
             </div>
           </>
         }

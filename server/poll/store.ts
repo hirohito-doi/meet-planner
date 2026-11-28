@@ -1,5 +1,5 @@
 // DB アクセスはこのファイルにまとめる。server/poll の外には見せない (ADR 0004)
-import { and, asc, eq, inArray, max } from "drizzle-orm";
+import { and, asc, eq, inArray, max, sql } from "drizzle-orm";
 import type { Db } from "@/server/db";
 import { availabilities, polls, responses, slots } from "@/server/db/schema";
 import type { Availability } from "./validation";
@@ -152,13 +152,38 @@ export async function hasResponse(db: Db, pollId: string, responseId: string) {
   return row !== undefined;
 }
 
-/** 日程調整と、その候補・回答・可否をすべて削除する(外部キーがないので明示的に消す) */
+/** 日程調整と、その候補・回答・可否をすべて削除する */
 export async function deletePoll(db: Db, pollId: string) {
-  const responseIds = db.select({ id: responses.id }).from(responses).where(eq(responses.pollId, pollId));
-  await db.batch([
-    db.delete(availabilities).where(inArray(availabilities.responseId, responseIds)),
-    db.delete(responses).where(eq(responses.pollId, pollId)),
-    db.delete(slots).where(eq(slots.pollId, pollId)),
-    db.delete(polls).where(eq(polls.id, pollId)),
-  ]);
+  await deletePolls(db, [pollId]);
+}
+
+/**
+ * 最後の候補の終了(候補が0件なら作成した時刻)が cutoff より前の日程調整の ID を返す。
+ * 確定しているかどうかは問わない
+ */
+export async function findPollIdsLastUsedBefore(db: Db, cutoff: number) {
+  const rows = await db
+    .select({ id: polls.id })
+    .from(polls)
+    .leftJoin(slots, eq(slots.pollId, polls.id))
+    .groupBy(polls.id)
+    .having(sql`coalesce(max(${slots.endAt}), ${polls.createdAt}) < ${cutoff}`);
+  return rows.map((r) => r.id);
+}
+
+/** D1 の1つの SQL に渡せる値は100個まで。余裕を持って、この件数ずつ消す */
+const DELETE_CHUNK = 50;
+
+/** 複数の日程調整と、その候補・回答・可否をすべて削除する(外部キーがないので明示的に消す) */
+export async function deletePolls(db: Db, pollIds: string[]) {
+  for (let i = 0; i < pollIds.length; i += DELETE_CHUNK) {
+    const ids = pollIds.slice(i, i + DELETE_CHUNK);
+    const responseIds = db.select({ id: responses.id }).from(responses).where(inArray(responses.pollId, ids));
+    await db.batch([
+      db.delete(availabilities).where(inArray(availabilities.responseId, responseIds)),
+      db.delete(responses).where(inArray(responses.pollId, ids)),
+      db.delete(slots).where(inArray(slots.pollId, ids)),
+      db.delete(polls).where(inArray(polls.id, ids)),
+    ]);
+  }
 }

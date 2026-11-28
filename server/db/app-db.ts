@@ -14,13 +14,12 @@ export function getDb(): Promise<Db> {
 }
 
 async function openD1(): Promise<Db> {
-  const [{ getCloudflareContext }, { drizzle }, schema] = await Promise.all([
+  const [{ getCloudflareContext }, { openD1Db }] = await Promise.all([
     import("@opennextjs/cloudflare"),
-    import("drizzle-orm/d1"),
-    import("./schema"),
+    import("./d1-db"),
   ]);
   const { env } = await getCloudflareContext({ async: true });
-  return drizzle(env.DB, { schema });
+  return openD1Db(env.DB);
 }
 
 let libsql: Promise<Db> | undefined;

@@ -20,7 +20,18 @@ import {
   updateDetailsAction,
 } from "./actions";
 
-export function AdminPanel({ poll, token, created }: { poll: PollView; token: string; created: boolean }) {
+/** retentionDays: 最後の候補の日から自動で削除されるまでの日数(server/poll の RETENTION_DAYS) */
+export function AdminPanel({
+  poll,
+  token,
+  created,
+  retentionDays,
+}: {
+  poll: PollView;
+  token: string;
+  created: boolean;
+  retentionDays: number;
+}) {
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const finalized = poll.finalizedSlotId !== null;
@@ -95,6 +106,7 @@ export function AdminPanel({ poll, token, created }: { poll: PollView; token: st
 
           <Section title="日程調整の削除">
             <p className="text-sm text-slate-600">候補と回答もすべて削除します。元に戻せません。</p>
+            <p className="text-xs text-slate-500">最後の候補の日から{retentionDays}日たつと、自動で削除されます。</p>
             <Button
               kind="danger"
               disabled={pending}
