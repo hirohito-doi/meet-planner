@@ -21,7 +21,7 @@
     }
   ],
   "vars": {
-    // プレビュー画像の URL を組み立てるためのサイトの URL。公開する前に、公開先の URL(https://…workers.dev や独自ドメイン)に替える
-    "SITE_URL": "http://localhost:8787"
+    // プレビュー画像の URL を組み立てるためのサイトの URL(公開先)。独自ドメインにしたら替える
+    "SITE_URL": "https://meet-planner.y4c.workers.dev"
   }
 }
