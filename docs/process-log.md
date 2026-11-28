@@ -297,3 +297,10 @@
 - ユーザーが Cloudflare の管理画面で D1(meet-planner)を作り、database_id と workers.dev のサブドメイン(y4c)を教えてくれた。wrangler.jsonc の database_id を本番の ID に、SITE_URL を https://meet-planner.y4c.workers.dev にした。database_id は秘密の値ではない(アカウントにログインしないと D1 に触れない)ので、公開リポジトリに入れた。
 - サブドメインがわからないと言われたので、URL のどこに入るか、あとで変えると共有済みのリンクが開けなくなることを説明した。
 - chore/production-config をユーザーの承認を得て main にマージし、GitHub に送ってからブランチを削除した。
+
+## 30. 本番で確かめ、ビルド時の SITE_URL を直す(fix/site-url-build)
+
+- ユーザーが Cloudflare で GitHub をつなぎ、最初のビルドと公開が成功した。本番の URL に、データを書き込まない確認(各ページの状態と Cache-Control、JS の immutable、見つからない画面の noindex)を curl で行った。
+- トップと作成画面の og:image が http://localhost:3000 になっていた。この2画面はビルドのときに作るが、wrangler.jsonc の vars は Workers の実行中にしか読めず、Cloudflare のビルドには SITE_URL がなかった。要求ごとに描く画面は正しかった。
+- SITE_URL を .env.production に移し、wrangler.jsonc の vars から消した。next build がこのファイルを読み、OpenNext は実行中にも読み込む。.gitignore の `.env*` に、このファイルだけを入れる例外を足した(秘密の値は入れない)。WSL でビルドして、ビルド時の画面と要求ごとの画面の両方が本番の URL になること、E2E が Workers と Node の両方で通ることを確かめた。
+- 学び: Workers の vars は実行中の値で、ビルドのときには見えない。ビルドのときに HTML を作る画面が使う値は、ビルドからも読める場所(.env.production や Workers Builds のビルド変数)に置く。手元のプレビューでは wrangler.jsonc の値がビルドの前から見えていたので、気づけなかった。
